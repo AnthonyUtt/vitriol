@@ -1,6 +1,8 @@
+use std::any::Any;
 use std::collections::VecDeque;
 
 use crate::entity::Entity;
+use crate::resource::ResourceStorage;
 
 pub struct World {
     /// Next fresh ID to assign
@@ -15,6 +17,8 @@ pub struct World {
 
     /// Number of currently alive entities
     alive_count: usize,
+
+    resources: ResourceStorage,
 }
 
 impl World {
@@ -24,6 +28,7 @@ impl World {
             generations: Vec::new(),
             free_ids: VecDeque::new(),
             alive_count: 0,
+            resources: ResourceStorage::new(),
         }
     }
 
@@ -75,6 +80,22 @@ impl World {
         let id = entity.id as usize;
 
         id < self.generations.len() && self.generations[id] == entity.generation
+    }
+
+    pub fn add_resource(&mut self, resource: impl Any) {
+        self.resources.add(resource)
+    }
+
+    pub fn get_resource<T: Any>(&self) -> Option<&T> {
+        self.resources.get::<T>()
+    }
+
+    pub fn get_resource_mut<T: Any>(&mut self) -> Option<&mut T> {
+        self.resources.get_mut::<T>()
+    }
+
+    pub fn delete_resource<T: Any>(&mut self) {
+        self.resources.delete::<T>()
     }
 }
 
