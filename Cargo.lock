@@ -556,6 +556,16 @@ name = "vtrl_ecs"
 version = "0.1.0"
 dependencies = [
  "vtrl_common",
+ "vtrl_ecs_macros",
+]
+
+[[package]]
+name = "vtrl_ecs_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

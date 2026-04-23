@@ -6,7 +6,7 @@ mod message_bus;
 pub mod prelude {
     // Re-exports
     pub use log;
-    
+
     // Utilities
     pub mod channel {
         pub use crate::channel::*;

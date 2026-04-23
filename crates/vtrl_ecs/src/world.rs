@@ -1,8 +1,33 @@
 use std::any::Any;
+use std::cell::{Ref, RefMut};
 use std::collections::VecDeque;
 
+use crate::component::*;
 use crate::entity::Entity;
+use crate::query::*;
 use crate::resource::ResourceStorage;
+
+pub struct EntityBuilder<'a> {
+    world: &'a mut World,
+    entity: Entity,
+}
+
+impl<'a> EntityBuilder<'a> {
+    pub fn with_component<T: Component>(self, component: T) -> Self {
+        self.world.add_component(self.entity, component);
+        self
+    }
+
+    pub fn id(&self) -> Entity {
+        self.entity
+    }
+}
+
+impl<'a> Drop for EntityBuilder<'a> {
+    fn drop(&mut self) {
+        // nothing to clean up
+    }
+}
 
 pub struct World {
     /// Next fresh ID to assign
@@ -18,6 +43,7 @@ pub struct World {
     /// Number of currently alive entities
     alive_count: usize,
 
+    components: ComponentStorage,
     resources: ResourceStorage,
 }
 
@@ -28,11 +54,12 @@ impl World {
             generations: Vec::new(),
             free_ids: VecDeque::new(),
             alive_count: 0,
+            components: ComponentStorage::new(),
             resources: ResourceStorage::new(),
         }
     }
 
-    pub fn spawn(&mut self) -> Entity {
+    pub fn spawn(&mut self) -> EntityBuilder<'_> {
         // Prefer recycled IDs if we have any
         let id = match self.free_ids.pop_front() {
             Some(id) => id,
@@ -51,7 +78,12 @@ impl World {
         let generation = self.generations[id as usize];
         self.alive_count += 1;
 
-        Entity::new(id, generation)
+        let entity = Entity::new(id, generation);
+
+        EntityBuilder {
+            world: self,
+            entity,
+        }
     }
 
     pub fn delete(&mut self, entity: Entity) {
@@ -96,6 +128,36 @@ impl World {
 
     pub fn delete_resource<T: Any>(&mut self) {
         self.resources.delete::<T>()
+    }
+
+    pub fn add_component<T: Component>(&mut self, entity: Entity, component: T) {
+        if self.is_alive(entity) {
+            self.components.insert(entity, component);
+        }
+    }
+
+    pub fn get_component<T: Component>(&self, entity: Entity) -> Option<Ref<'_, T>> {
+        if self.is_alive(entity) {
+            self.components.get::<T>(entity)
+        } else {
+            None
+        }
+    }
+
+    pub fn get_component_mut<T: Component>(&self, entity: Entity) -> Option<RefMut<'_, T>> {
+        if self.is_alive(entity) {
+            self.components.get_mut::<T>(entity)
+        } else {
+            None
+        }
+    }
+
+    pub fn has_component<T: Component>(&self, entity: Entity) -> bool {
+        self.components.has::<T>(entity)
+    }
+
+    pub fn view<F: QueryFetch, Fi: QueryFilter>(&self) -> Query<'_, F, Fi> {
+        self.components.query::<F, Fi>(self)
     }
 }
 

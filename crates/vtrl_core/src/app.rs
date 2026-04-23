@@ -1,8 +1,8 @@
 use std::{
-    any::TypeId, 
+    any::TypeId,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     },
 };
 
@@ -23,18 +23,19 @@ impl App {
         ctrlc::set_handler(move || {
             log::trace!("Ctrl-C detected, shutting down!");
             sc.store(true, Ordering::SeqCst);
-        }).expect("Unable to set Ctrl-C handler!");
+        })
+        .expect("Unable to set Ctrl-C handler!");
 
         let sc = should_close.clone();
         let handler = SystemMessageHandler { should_close: sc };
-        message_bus::register_handler(Box::new(handler), Some(TypeId::of::<SystemMessage>())).expect("Unable to register system message handler!");
+        message_bus::register_handler(Box::new(handler), Some(TypeId::of::<SystemMessage>()))
+            .expect("Unable to register system message handler!");
 
         #[cfg(debug_assertions)]
-        message_bus::register_handler(Box::new(MessageSink), None).expect("Unable to register message sink!");
+        message_bus::register_handler(Box::new(MessageSink), None)
+            .expect("Unable to register message sink!");
 
-        App {
-            should_close,
-        }
+        App { should_close }
     }
 
     pub fn run(&self) -> Result<()> {
@@ -64,7 +65,7 @@ impl MessageHandler for SystemMessageHandler {
         if let Some(msg) = msg.as_any().downcast_ref::<SystemMessage>() {
             match msg {
                 SystemMessage::Shutdown => self.should_close.store(true, Ordering::SeqCst),
-                SystemMessage::Ping => {},
+                SystemMessage::Ping => {}
             }
         }
     }

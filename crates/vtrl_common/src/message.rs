@@ -1,4 +1,4 @@
-use std::any::{type_name, Any, TypeId};
+use std::any::{Any, TypeId, type_name};
 use std::fmt::Debug;
 use std::time::Duration;
 
@@ -9,7 +9,7 @@ pub trait MessageHandler: Send + Sync {
 /// A message that can be sent on the message bus
 pub trait Message
 where
-    Self: 'static + Send + Sync + Debug
+    Self: 'static + Send + Sync + Debug,
 {
     /// Get the type ID of the message
     fn message_type_id(&self) -> TypeId {
@@ -58,6 +58,10 @@ impl Message for SystemMessage {
         Some("system")
     }
 
-    fn as_any(&self) -> &dyn Any { self }
-    fn as_any_mut(&mut self) -> &mut dyn Any { self }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 }

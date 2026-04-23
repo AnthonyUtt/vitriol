@@ -3,18 +3,26 @@ use std::cell::{Ref, RefMut};
 use std::collections::HashMap;
 
 use crate::entity::Entity;
+use crate::query::*;
+use crate::world::World;
 
 mod pool;
 use pool::*;
 
-pub trait Component: Any + 'static {
+pub trait Component: Any + Send + Sync + 'static {
+    fn name() -> &'static str
+    where
+        Self: Sized,
+    {
+        std::any::type_name::<Self>()
+    }
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 #[derive(Default)]
 pub struct ComponentStorage {
-    storage: HashMap<TypeId, ComponentPool>,
+    storage: HashMap<TypeId, Box<dyn AnyPool>>,
 }
 
 impl ComponentStorage {
@@ -22,15 +30,23 @@ impl ComponentStorage {
         Self::default()
     }
 
-    pub fn register<T: Component>(&mut self) {
-        let type_id = TypeId::of::<T>();
-        self.storage.entry(type_id).or_default();
-    }
-
     pub fn insert<T: Component>(&mut self, entity: Entity, component: T) {
         let type_id = TypeId::of::<T>();
-        if let Some(pool) = self.storage.get_mut(&type_id) {
-            pool.insert_or_update(entity.id as usize, component);
+        let pool = self
+            .storage
+            .entry(type_id)
+            .or_insert_with(|| Box::new(ComponentPool::<T>::new()));
+        pool.as_any_mut()
+            .downcast_mut::<ComponentPool<T>>()
+            .unwrap() // Since we pulled/created by type_id, this should be fine
+            .insert_or_update(entity, component);
+    }
+
+    pub fn has<T: Component>(&self, entity: Entity) -> bool {
+        let type_id = TypeId::of::<T>();
+        match self.storage.get(&type_id) {
+            Some(pool) => pool.has(entity),
+            None => false,
         }
     }
 
@@ -38,13 +54,10 @@ impl ComponentStorage {
         let type_id = TypeId::of::<T>();
         match self.storage.get(&type_id) {
             Some(pool) => {
-                match pool.get(entity.id as usize) {
-                    Some(r) if r.as_any().is::<T>() => {
-                        Some(Ref::map(r, |t| t.as_any().downcast_ref::<T>().unwrap()))
-                    },
-                    _ => None,
-                }
-            },
+                // Since we fetched via type_id, this should be fine
+                let pool = pool.as_any().downcast_ref::<ComponentPool<T>>().unwrap();
+                pool.get(entity)
+            }
             None => None,
         }
     }
@@ -53,13 +66,10 @@ impl ComponentStorage {
         let type_id = TypeId::of::<T>();
         match self.storage.get(&type_id) {
             Some(pool) => {
-                match pool.get_mut(entity.id as usize) {
-                    Some(r) if r.as_any().is::<T>() => {
-                        Some(RefMut::map(r, |t| t.as_any_mut().downcast_mut::<T>().unwrap()))
-                    },
-                    _ => None,
-                }
-            },
+                // Since we fetched via type_id, this should be fine
+                let pool = pool.as_any().downcast_ref::<ComponentPool<T>>().unwrap();
+                pool.get_mut(entity)
+            }
             None => None,
         }
     }
@@ -67,8 +77,30 @@ impl ComponentStorage {
     pub fn remove<T: Component>(&mut self, entity: Entity) {
         let type_id = TypeId::of::<T>();
         if let Some(pool) = self.storage.get_mut(&type_id) {
-            pool.remove(entity.id as usize);
+            // Since we fetched via type_id, this should be fine
+            let pool = pool
+                .as_any_mut()
+                .downcast_mut::<ComponentPool<T>>()
+                .unwrap();
+            pool.remove(entity);
         }
+    }
+
+    pub fn query<'w, F: QueryFetch, Fi: QueryFilter>(
+        &'w self,
+        world: &'w World,
+    ) -> Query<'w, F, Fi> {
+        let candidates = self.smallest_pool_entities(F::type_ids());
+        Query::new(world, candidates)
+    }
+
+    fn smallest_pool_entities(&self, type_ids: Vec<TypeId>) -> Vec<Entity> {
+        type_ids
+            .iter()
+            .filter_map(|type_id| self.storage.get(type_id))
+            .min_by_key(|pool| pool.len())
+            .map(|pool| pool.entities())
+            .unwrap_or_default()
     }
 }
 
@@ -81,7 +113,6 @@ mod test {
         let mut components = ComponentStorage::new();
         let entity = Entity::new(0, 0);
 
-        components.register::<Position>();
         components.insert(entity, Position(4.0, 8.0));
         let pos = components.get::<Position>(entity).unwrap();
 
@@ -94,7 +125,6 @@ mod test {
         let mut components = ComponentStorage::new();
         let entity = Entity::new(0, 0);
 
-        components.register::<Position>();
         components.insert(entity, Position(4.0, 8.0));
         {
             let mut pos = components.get_mut::<Position>(entity).unwrap();
@@ -113,7 +143,6 @@ mod test {
         let mut components = ComponentStorage::new();
         let entity = Entity::new(0, 0);
 
-        components.register::<Position>();
         components.insert(entity, Position(4.0, 8.0));
         {
             let pos = components.get::<Position>(entity).unwrap();
@@ -127,9 +156,6 @@ mod test {
         assert!(pos.is_none());
     }
 
+    #[derive(vtrl_ecs_macros::Component)]
     struct Position(pub f32, pub f32);
-    impl Component for Position {
-        fn as_any(&self) -> &dyn Any { self }
-        fn as_any_mut(&mut self) -> &mut dyn Any { self }
-    }
 }

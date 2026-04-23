@@ -1,16 +1,12 @@
+use once_cell::sync::Lazy;
 use std::any::TypeId;
 use std::sync::{
-    atomic::{AtomicU64, Ordering},
     RwLock,
+    atomic::{AtomicU64, Ordering},
 };
 use std::time::Instant;
-use once_cell::sync::Lazy;
 
-use crate::{
-    channel::*,
-    error::*,
-    message::*,
-};
+use crate::{channel::*, error::*, message::*};
 
 static MESSAGE_BUS: Lazy<MessageBus> = Lazy::new(MessageBus::default);
 
@@ -80,7 +76,11 @@ impl MessageBus {
         }
     }
 
-    pub fn register_handler(&self, handler: Box<dyn MessageHandler>, msg_type: Option<TypeId>) -> Result<()> {
+    pub fn register_handler(
+        &self,
+        handler: Box<dyn MessageHandler>,
+        msg_type: Option<TypeId>,
+    ) -> Result<()> {
         let type_id = match msg_type {
             Some(msg_type) => HandlerType::Typed(msg_type),
             None => HandlerType::Generic,
@@ -93,8 +93,10 @@ impl MessageBus {
                     type_id,
                 });
                 Ok(())
-            },
-            Err(_) => Err(VtrlError::MessageBus("Unable to obtain lock on handler!".to_string())),
+            }
+            Err(_) => Err(VtrlError::MessageBus(
+                "Unable to obtain lock on handler!".to_string(),
+            )),
         }
     }
 
@@ -107,8 +109,10 @@ impl MessageBus {
             id,
         };
 
-        self.sender.send(envelope).map_err(|_| VtrlError::MessageBus("Error sending message to bus!".to_string()))?;
-        
+        self.sender
+            .send(envelope)
+            .map_err(|_| VtrlError::MessageBus("Error sending message to bus!".to_string()))?;
+
         Ok(id)
     }
 
@@ -122,8 +126,9 @@ impl MessageBus {
                     log::trace!("Processing message {}", envelope.id);
 
                     if let Some(ttl) = envelope.message.ttl()
-                        && Instant::now() - envelope.timestamp > ttl {
-                            continue;
+                        && Instant::now() - envelope.timestamp > ttl
+                    {
+                        continue;
                     }
 
                     let type_id = envelope.message.message_type_id();
@@ -133,15 +138,17 @@ impl MessageBus {
                             HandlerType::Generic => handler.inner.call(&*envelope.message),
                             HandlerType::Typed(tid) if tid == type_id => {
                                 handler.inner.call(&*envelope.message)
-                            },
+                            }
                             _ => continue,
                         }
                     }
                 }
 
                 Ok(())
-            },
-            Err(_) => Err(VtrlError::MessageBus("Unable to obtain lock on handler!".to_string())),
+            }
+            Err(_) => Err(VtrlError::MessageBus(
+                "Unable to obtain lock on handler!".to_string(),
+            )),
         }
     }
 }
