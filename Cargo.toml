@@ -18,3 +18,4 @@ edition = "2024"
 
 [dependencies]
 vtrl_core = { path = "./crates/vtrl_core" }
+rand = "0.10"

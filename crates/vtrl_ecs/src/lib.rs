@@ -11,6 +11,13 @@ pub mod prelude {
     pub use crate::entity::*;
     pub use crate::query::{With, Without};
     pub use crate::resource::*;
+    pub use crate::service::*;
     pub use crate::world::*;
     pub use vtrl_ecs_macros::Component;
+}
+
+mod service {
+    use crate::world::World;
+    pub trait Service: Fn(&mut World) + 'static {}
+    impl<T: Fn(&mut World) + 'static> Service for T {}
 }

@@ -1,4 +1,4 @@
-use std::cell::Ref;
+use std::cell::{Ref, RefMut};
 
 use vtrl_ecs::prelude::*;
 
@@ -68,6 +68,34 @@ fn view_with_filter() {
     assert_eq!(*e, without_size);
     assert_eq!(pos.0, 1.0);
     assert_eq!(pos.1, 1.0);
+}
+
+#[test]
+fn view_with_mutable_component() {
+    let mut world = World::new();
+
+    let entity = world.spawn().with_component(Position(0.0, 0.0)).id();
+
+    {
+        let mut view: Vec<(Entity, RefMut<'_, Position>)> = world.view_mut::<Position, ()>().iter().collect();
+        assert_eq!(view.len(), 1);
+
+        let (e, ref mut pos) = view[0];
+        assert_eq!(e, entity);
+        assert_eq!(pos.0, 0.0);
+        assert_eq!(pos.1, 0.0);
+
+        pos.0 = 10.0;
+        pos.1 = 10.0;
+    }
+
+    let view: Vec<(Entity, Ref<'_, Position>)> = world.view::<Position, ()>().iter().collect();
+    assert_eq!(view.len(), 1);
+
+    let (e, pos) = &view[0];
+    assert_eq!(*e, entity);
+    assert_eq!(pos.0, 10.0);
+    assert_eq!(pos.1, 10.0);
 }
 
 #[derive(Component)]

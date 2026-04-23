@@ -31,7 +31,7 @@ pub fn derive_component(input: TokenStream) -> TokenStream {
         .unwrap_or_else(|| ident.to_string());
 
     quote! {
-        impl #impl_generics ::vtrl_ecs::prelude::Component for #ident #ty_generics #where_clause {
+        impl #impl_generics Component for #ident #ty_generics #where_clause {
             fn name() -> &'static str { #name_str }
             fn as_any(&self) -> &dyn ::std::any::Any { self }
             fn as_any_mut(&mut self) -> &mut dyn ::std::any::Any { self }

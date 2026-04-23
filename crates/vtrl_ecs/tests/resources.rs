@@ -15,7 +15,7 @@ fn create_and_get_resource_mutably() {
 
     world.add_resource(ArbitraryValue(512));
     {
-        let value = world.get_resource_mut::<ArbitraryValue>().unwrap();
+        let mut value = world.get_resource_mut::<ArbitraryValue>().unwrap();
         assert_eq!(value.0, 512);
         value.0 = 256;
     }

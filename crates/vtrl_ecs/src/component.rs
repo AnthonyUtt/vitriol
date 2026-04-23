@@ -1,5 +1,5 @@
 use std::any::{Any, TypeId};
-use std::cell::{Ref, RefMut};
+use std::cell::{Ref, RefMut, RefCell};
 use std::collections::HashMap;
 
 use crate::entity::Entity;
@@ -22,7 +22,7 @@ pub trait Component: Any + Send + Sync + 'static {
 
 #[derive(Default)]
 pub struct ComponentStorage {
-    storage: HashMap<TypeId, Box<dyn AnyPool>>,
+    storage: HashMap<TypeId, Box<RefCell<dyn AnyPool>>>,
 }
 
 impl ComponentStorage {
@@ -35,8 +35,9 @@ impl ComponentStorage {
         let pool = self
             .storage
             .entry(type_id)
-            .or_insert_with(|| Box::new(ComponentPool::<T>::new()));
-        pool.as_any_mut()
+            .or_insert_with(|| Box::new(RefCell::new(ComponentPool::<T>::new())));
+        pool.borrow_mut()
+            .as_any_mut()
             .downcast_mut::<ComponentPool<T>>()
             .unwrap() // Since we pulled/created by type_id, this should be fine
             .insert_or_update(entity, component);
@@ -45,44 +46,62 @@ impl ComponentStorage {
     pub fn has<T: Component>(&self, entity: Entity) -> bool {
         let type_id = TypeId::of::<T>();
         match self.storage.get(&type_id) {
-            Some(pool) => pool.has(entity),
+            Some(pool) => pool.borrow().has(entity),
             None => false,
         }
     }
 
     pub fn get<T: Component>(&self, entity: Entity) -> Option<Ref<'_, T>> {
         let type_id = TypeId::of::<T>();
-        match self.storage.get(&type_id) {
-            Some(pool) => {
-                // Since we fetched via type_id, this should be fine
-                let pool = pool.as_any().downcast_ref::<ComponentPool<T>>().unwrap();
-                pool.get(entity)
-            }
-            None => None,
+        let pool = self.storage.get(&type_id)?;
+        let pool = pool.borrow();
+
+        if pool.has(entity) {
+            Some(Ref::map(pool, |p| {
+                p.as_any()
+                    .downcast_ref::<ComponentPool<T>>()
+                    .unwrap() // fine because we pulled by type id
+                    .get(entity)
+                    .unwrap() // fine because of pool.has
+            }))
+        } else {
+            None
         }
     }
 
     pub fn get_mut<T: Component>(&self, entity: Entity) -> Option<RefMut<'_, T>> {
         let type_id = TypeId::of::<T>();
-        match self.storage.get(&type_id) {
-            Some(pool) => {
-                // Since we fetched via type_id, this should be fine
-                let pool = pool.as_any().downcast_ref::<ComponentPool<T>>().unwrap();
-                pool.get_mut(entity)
-            }
-            None => None,
+        let pool = self.storage.get(&type_id)?;
+        let pool = pool.borrow_mut();
+
+        if pool.has(entity) {
+            Some(RefMut::map(pool, |p| {
+                p.as_any_mut()
+                    .downcast_mut::<ComponentPool<T>>()
+                    .unwrap() // fine because we pulled by type id
+                    .get_mut(entity)
+                    .unwrap() // fine because of pool.has
+            }))
+        } else {
+            None
         }
     }
 
-    pub fn remove<T: Component>(&mut self, entity: Entity) {
+    pub fn remove<T: Component>(&self, entity: Entity) {
         let type_id = TypeId::of::<T>();
-        if let Some(pool) = self.storage.get_mut(&type_id) {
+        if let Some(pool) = self.storage.get(&type_id) {
             // Since we fetched via type_id, this should be fine
-            let pool = pool
+            pool.borrow_mut()
                 .as_any_mut()
                 .downcast_mut::<ComponentPool<T>>()
-                .unwrap();
-            pool.remove(entity);
+                .unwrap()
+                .remove(entity);
+        }
+    }
+
+    pub fn remove_all(&self, entity: Entity) {
+        for pool in self.storage.values() {
+            pool.borrow_mut().remove(entity);
         }
     }
 
@@ -94,12 +113,20 @@ impl ComponentStorage {
         Query::new(world, candidates)
     }
 
+    pub fn query_mut<'w, F: QueryFetchMut, Fi: QueryFilter>(
+        &'w self,
+        world: &'w World,
+    ) -> QueryMut<'w, F, Fi> {
+        let candidates = self.smallest_pool_entities(F::type_ids());
+        QueryMut::new(world, candidates)
+    }
+
     fn smallest_pool_entities(&self, type_ids: Vec<TypeId>) -> Vec<Entity> {
         type_ids
             .iter()
             .filter_map(|type_id| self.storage.get(type_id))
-            .min_by_key(|pool| pool.len())
-            .map(|pool| pool.entities())
+            .min_by_key(|pool| pool.borrow().len())
+            .map(|pool| pool.borrow().entities())
             .unwrap_or_default()
     }
 }

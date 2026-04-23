@@ -98,6 +98,9 @@ impl World {
             return;
         }
 
+        // remove all components for this enitity
+        self.components.remove_all(entity);
+
         // increment generation, which invalidates all existing references
         // to this slot
         self.generations[id] = self.generations[id].wrapping_add(1);
@@ -118,11 +121,11 @@ impl World {
         self.resources.add(resource)
     }
 
-    pub fn get_resource<T: Any>(&self) -> Option<&T> {
+    pub fn get_resource<T: Any>(&self) -> Option<Ref<'_, T>> {
         self.resources.get::<T>()
     }
 
-    pub fn get_resource_mut<T: Any>(&mut self) -> Option<&mut T> {
+    pub fn get_resource_mut<T: Any>(&self) -> Option<RefMut<'_, T>> {
         self.resources.get_mut::<T>()
     }
 
@@ -158,6 +161,10 @@ impl World {
 
     pub fn view<F: QueryFetch, Fi: QueryFilter>(&self) -> Query<'_, F, Fi> {
         self.components.query::<F, Fi>(self)
+    }
+
+    pub fn view_mut<F: QueryFetchMut, Fi: QueryFilter>(&self) -> QueryMut<'_, F, Fi> {
+        self.components.query_mut::<F, Fi>(self)
     }
 }
 

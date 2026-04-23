@@ -1,15 +1,11 @@
-use std::{
-    any::Any,
-    cell::{Ref, RefCell, RefMut},
-    rc::Rc,
-};
+use std::any::Any;
 
 use super::Component;
 use crate::entity::Entity;
 
 pub struct ComponentPool<T: Component> {
     entity_ids: Vec<Option<(Entity, usize)>>,
-    components: Vec<Rc<RefCell<T>>>,
+    components: Vec<T>,
     component_to_entity: Vec<usize>,
 }
 
@@ -50,32 +46,32 @@ impl<T: Component> ComponentPool<T> {
 
         match self.entity_ids[id] {
             Some((_, component_id)) => {
-                self.components[component_id] = Rc::new(RefCell::new(component));
+                self.components[component_id] = component;
             }
             None => {
                 self.entity_ids[id] = Some((entity, self.components.len()));
-                self.components.push(Rc::new(RefCell::new(component)));
+                self.components.push(component);
                 self.component_to_entity.push(id);
             }
         }
     }
 
-    pub fn get(&self, entity: Entity) -> Option<Ref<'_, T>> {
+    pub fn get(&self, entity: Entity) -> Option<&T> {
         let id = entity.id as usize;
         if id >= self.entity_ids.len() {
             return None;
         }
 
-        self.entity_ids[id].map(|(_, component_id)| self.components[component_id].borrow())
+        self.entity_ids[id].map(|(_, component_id)| &self.components[component_id])
     }
 
-    pub fn get_mut(&self, entity: Entity) -> Option<RefMut<'_, T>> {
+    pub fn get_mut(&mut self, entity: Entity) -> Option<&mut T> {
         let id = entity.id as usize;
         if id >= self.entity_ids.len() {
             return None;
         }
 
-        self.entity_ids[id].map(|(_, component_id)| self.components[component_id].borrow_mut())
+        self.entity_ids[id].map(|(_, component_id)| &mut self.components[component_id])
     }
 
     pub fn remove(&mut self, entity: Entity) {
@@ -116,6 +112,7 @@ pub trait AnyPool {
     fn len(&self) -> usize;
     fn has(&self, entity: Entity) -> bool;
     fn entities(&self) -> Vec<Entity>;
+    fn remove(&mut self, entity: Entity);
 }
 
 impl<T: Component> AnyPool for ComponentPool<T> {
@@ -133,5 +130,8 @@ impl<T: Component> AnyPool for ComponentPool<T> {
     }
     fn entities(&self) -> Vec<Entity> {
         self.entities()
+    }
+    fn remove(&mut self, entity: Entity) {
+        self.remove(entity)
     }
 }

@@ -1,5 +1,5 @@
 use std::any::TypeId;
-use std::cell::Ref;
+use std::cell::{Ref, RefMut};
 use std::marker::PhantomData;
 
 use crate::component::Component;
@@ -52,6 +52,53 @@ impl_query_fetch_tuple!(A, B, C, D, E, F, G);
 impl_query_fetch_tuple!(A, B, C, D, E, F, G, H);
 impl_query_fetch_tuple!(A, B, C, D, E, F, G, H, I);
 impl_query_fetch_tuple!(A, B, C, D, E, F, G, H, I, J);
+
+pub trait QueryFetchMut {
+    type Item<'a>;
+
+    fn type_ids() -> Vec<TypeId>;
+    fn fetch(world: &World, entity: Entity) -> Option<Self::Item<'_>>;
+}
+
+impl<T: Component> QueryFetchMut for T {
+    type Item<'a> = RefMut<'a, T>;
+
+    fn type_ids() -> Vec<TypeId> {
+        vec![TypeId::of::<T>()]
+    }
+
+    fn fetch(world: &World, entity: Entity) -> Option<Self::Item<'_>> {
+        world.get_component_mut::<T>(entity)
+    }
+}
+
+macro_rules! impl_query_fetch_mut_tuple {
+    ($($name:ident),+) => {
+        impl<$($name: QueryFetchMut),+> QueryFetchMut for ($($name,)+) {
+            type Item<'a> = ($($name::Item<'a>,)+);
+
+            fn type_ids() -> Vec<TypeId> {
+                let mut ids = vec![];
+                $(ids.extend(&$name::type_ids());)+
+                ids
+            }
+
+            fn fetch(world: &World, entity: Entity) -> Option<Self::Item<'_>> {
+                Some(($($name::fetch(world, entity)?,)+))
+            }
+        }
+    };
+}
+
+impl_query_fetch_mut_tuple!(A, B);
+impl_query_fetch_mut_tuple!(A, B, C);
+impl_query_fetch_mut_tuple!(A, B, C, D);
+impl_query_fetch_mut_tuple!(A, B, C, D, E);
+impl_query_fetch_mut_tuple!(A, B, C, D, E, F);
+impl_query_fetch_mut_tuple!(A, B, C, D, E, F, G);
+impl_query_fetch_mut_tuple!(A, B, C, D, E, F, G, H);
+impl_query_fetch_mut_tuple!(A, B, C, D, E, F, G, H, I);
+impl_query_fetch_mut_tuple!(A, B, C, D, E, F, G, H, I, J);
 
 pub struct With<T: Component>(PhantomData<T>);
 pub struct Without<T: Component>(PhantomData<T>);
@@ -108,6 +155,33 @@ pub struct Query<'w, F: QueryFetch, Fi: QueryFilter = ()> {
 impl<'w, F: QueryFetch, Fi: QueryFilter> Query<'w, F, Fi> {
     pub fn new(world: &'w World, entities: Vec<Entity>) -> Query<'w, F, Fi> {
         Query {
+            world,
+            entities,
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (Entity, F::Item<'w>)> + '_ {
+        self.entities.iter().filter_map(|&entity| {
+            if !Fi::matches(self.world, entity) {
+                return None;
+            }
+
+            let item = F::fetch(self.world, entity)?;
+            Some((entity, item))
+        })
+    }
+}
+
+pub struct QueryMut<'w, F: QueryFetchMut, Fi: QueryFilter = ()> {
+    world: &'w World,
+    entities: Vec<Entity>,
+    _phantom: PhantomData<(F, Fi)>,
+}
+
+impl<'w, F: QueryFetchMut, Fi: QueryFilter> QueryMut<'w, F, Fi> {
+    pub fn new(world: &'w World, entities: Vec<Entity>) -> QueryMut<'w, F, Fi> {
+        QueryMut {
             world,
             entities,
             _phantom: PhantomData,

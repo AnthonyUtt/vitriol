@@ -1,9 +1,10 @@
 use std::any::{Any, TypeId};
+use std::cell::{Ref, RefMut, RefCell};
 use std::collections::HashMap;
 
 #[derive(Debug, Default)]
 pub struct ResourceStorage {
-    storage: HashMap<TypeId, Box<dyn Any>>,
+    storage: HashMap<TypeId, Box<RefCell<dyn Any>>>,
 }
 
 impl ResourceStorage {
@@ -13,23 +14,17 @@ impl ResourceStorage {
 
     pub fn add(&mut self, resource: impl Any) {
         let type_id = resource.type_id();
-        self.storage.insert(type_id, Box::new(resource));
+        self.storage.insert(type_id, Box::new(RefCell::new(resource)));
     }
 
-    pub fn get<T: Any>(&self) -> Option<&T> {
+    pub fn get<T: Any>(&self) -> Option<Ref<'_, T>> {
         let type_id = TypeId::of::<T>();
-        match self.storage.get(&type_id) {
-            Some(any_val) => any_val.downcast_ref::<T>(),
-            None => None,
-        }
+        self.storage.get(&type_id).map(|val| Ref::map(val.borrow(), |i| i.downcast_ref::<T>().unwrap()))
     }
 
-    pub fn get_mut<T: Any>(&mut self) -> Option<&mut T> {
+    pub fn get_mut<T: Any>(&self) -> Option<RefMut<'_, T>> {
         let type_id = TypeId::of::<T>();
-        match self.storage.get_mut(&type_id) {
-            Some(any_val) => any_val.downcast_mut::<T>(),
-            None => None,
-        }
+        self.storage.get(&type_id).map(|val| RefMut::map(val.borrow_mut(), |i| i.downcast_mut::<T>().unwrap()))
     }
 
     pub fn delete<T: Any>(&mut self) {
@@ -61,7 +56,7 @@ mod test {
         resources.add(value);
 
         {
-            let res = resources.get_mut::<ArbitraryValue>().unwrap();
+            let mut res = resources.get_mut::<ArbitraryValue>().unwrap();
             assert_eq!(res.0, 128);
             res.0 = 129;
         }
