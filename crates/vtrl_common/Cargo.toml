@@ -10,3 +10,6 @@ log.workspace = true
 once_cell.workspace = true
 flume.workspace = true
 bilge.workspace = true
+ultraviolet.workspace = true
+serde.workspace = true
+serde_derive.workspace = true

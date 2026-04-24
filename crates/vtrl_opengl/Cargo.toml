@@ -1,0 +1,9 @@
+[package]
+name = "vtrl_opengl"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+vtrl_common = { path = "../vtrl_common" }
+gl = "*"
+ultraviolet.workspace = true
