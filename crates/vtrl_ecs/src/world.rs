@@ -5,10 +5,10 @@ use std::rc::Rc;
 
 use crate::component::*;
 use crate::entity::Entity;
+use crate::prelude::System;
 use crate::query::*;
 use crate::resource::ResourceStorage;
 use crate::schedule::*;
-use crate::prelude::System;
 
 pub struct EntityBuilder<'a> {
     world: &'a mut World,

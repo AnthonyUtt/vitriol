@@ -8,8 +8,8 @@ use std::{
 
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
+use vtrl_opengl::{plugin::Renderer2DPlugin, prelude::*};
 use vtrl_plugins::prelude::*;
-use vtrl_opengl::prelude::*;
 
 use crate::plugin::*;
 
@@ -91,6 +91,7 @@ impl App {
     }
 
     pub fn with_default_plugins(mut self) -> Self {
+        self.plugins.insert(Renderer2DPlugin);
         self.plugins.insert(TimePlugin);
         self
     }

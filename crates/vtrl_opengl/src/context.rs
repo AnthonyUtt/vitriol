@@ -1,18 +1,22 @@
-extern crate glfw;
 extern crate gl;
+extern crate glfw;
 
-use glfw::{Context, Glfw, GlfwReceiver, PWindow, WindowHint, OpenGlProfileHint};
+use glfw::{Context, Glfw, GlfwReceiver, OpenGlProfileHint, PWindow, WindowHint};
 use lazy_static::lazy_static;
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
     Arc, Mutex,
+    atomic::{AtomicBool, Ordering},
 };
 
 use vtrl_common::prelude::*;
 
+use crate::renderers::*;
+use crate::types::*;
+
 lazy_static! {
     static ref GLFW_INIT: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
-    static ref RENDER_CONTEXT: Arc<Mutex<Box<RenderContext>>> = Arc::new(Mutex::new(Box::new(RenderContext::new())));
+    static ref RENDER_CONTEXT: Arc<Mutex<Box<RenderContext>>> =
+        Arc::new(Mutex::new(Box::new(RenderContext::new())));
 }
 
 pub fn init(settings: WindowSettings) -> Result<()> {
@@ -26,6 +30,19 @@ pub fn init(settings: WindowSettings) -> Result<()> {
 pub fn process_events() {
     if let Ok(mut ctx) = RENDER_CONTEXT.lock() {
         ctx.process_events();
+    }
+}
+
+pub fn clear(r: f32, g: f32, b: f32, a: f32) {
+    unsafe {
+        gl::ClearColor(r, g, b, a);
+        gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+    }
+}
+
+pub fn draw_quad_instances(instances: &[QuadInstance]) {
+    if let Ok(ctx) = RENDER_CONTEXT.lock() {
+        ctx.draw_quad_instances(instances);
     }
 }
 
@@ -51,6 +68,8 @@ struct WindowContext {
 struct RenderContext {
     glfw: Option<GlfwWrapper>,
     window: Option<WindowContext>,
+    matrix: Mat4,
+    quad_renderer: Option<QuadRenderer>,
 }
 
 impl RenderContext {
@@ -58,6 +77,8 @@ impl RenderContext {
         RenderContext {
             glfw: None,
             window: None,
+            matrix: Mat4::identity(),
+            quad_renderer: None,
         }
     }
 
@@ -70,18 +91,23 @@ impl RenderContext {
         #[cfg(debug_assertions)]
         glfw.window_hint(WindowHint::OpenGlDebugContext(true));
 
-        let (mut pwindow, events) = glfw.create_window(
-            settings.width, settings.height, settings.title, glfw::WindowMode::Windowed
-        ).ok_or(VtrlError::Window("Failed to create core window!".to_string()))?;
+        let (mut pwindow, events) = glfw
+            .create_window(
+                settings.width,
+                settings.height,
+                settings.title,
+                glfw::WindowMode::Windowed,
+            )
+            .ok_or(VtrlError::Window(
+                "Failed to create core window!".to_string(),
+            ))?;
 
         pwindow.make_current();
         pwindow.set_all_polling(true);
 
-        gl::load_with(|s| {
-            match pwindow.get_proc_address(s) {
-                Some(addr) => addr as *const std::ffi::c_void,
-                None => std::ptr::null(),
-            }
+        gl::load_with(|s| match pwindow.get_proc_address(s) {
+            Some(addr) => addr as *const std::ffi::c_void,
+            None => std::ptr::null(),
         });
         Self::print_gl_facts()?;
         set_gl_debug_message_callback();
@@ -93,13 +119,18 @@ impl RenderContext {
             window: pwindow,
             events,
         });
+        self.matrix =
+            self.ortho_top_left_matrix(settings.width as f32, settings.height as f32, -1., 1.);
+        self.quad_renderer = Some(QuadRenderer::new());
 
         Ok(())
     }
 
     fn init_glfw() -> Result<Glfw> {
         if GLFW_INIT.load(Ordering::SeqCst) {
-            return Err(VtrlError::Window("GLFW has already been initialized!".to_string()));
+            return Err(VtrlError::Window(
+                "GLFW has already been initialized!".to_string(),
+            ));
         }
 
         use glfw::fail_on_errors;
@@ -115,7 +146,9 @@ impl RenderContext {
         unsafe {
             let error = gl::GetError();
             if error != gl::NO_ERROR {
-                return Err(VtrlError::Window(format!("OpenGL error after init: {error}")));
+                return Err(VtrlError::Window(format!(
+                    "OpenGL error after init: {error}"
+                )));
             }
 
             use std::ffi::CStr;
@@ -144,7 +177,8 @@ impl RenderContext {
                         let _ = message_bus::send(WindowMessage::Reposition(x as u32, y as u32));
                     }
                     Size(width, height) => {
-                        let _ = message_bus::send(WindowMessage::Resize(width as u32, height as u32));
+                        let _ =
+                            message_bus::send(WindowMessage::Resize(width as u32, height as u32));
                     }
                     Close => {
                         let _ = message_bus::send(SystemMessage::Shutdown);
@@ -159,14 +193,18 @@ impl RenderContext {
                         let _ = message_bus::send(WindowMessage::Minimize(iconify));
                     }
                     FramebufferSize(width, height) => {
-                        let _ = message_bus::send(WindowMessage::FramebufferResize(width as u32, height as u32));
+                        let _ = message_bus::send(WindowMessage::FramebufferResize(
+                            width as u32,
+                            height as u32,
+                        ));
                     }
                     MouseButton(button, action, _mods) => {
                         let state = matches!(action, glfw::Action::Press);
                         let _ = message_bus::send(WindowMessage::MouseButton(button as u32, state));
                     }
                     CursorPos(x, y) => {
-                        let _ = message_bus::send(WindowMessage::CursorPosition(x as u32, y as u32));
+                        let _ =
+                            message_bus::send(WindowMessage::CursorPosition(x as u32, y as u32));
                     }
                     CursorEnter(entered) => {
                         let _ = message_bus::send(WindowMessage::CursorEnter(entered));
@@ -197,6 +235,31 @@ impl RenderContext {
             }
 
             window.window.swap_buffers();
+        }
+    }
+
+    // Matrix to be submitted to shader for converting pixels to NDC
+    pub fn ortho_top_left_matrix(&self, width: f32, height: f32, near: f32, far: f32) -> Mat4 {
+        let sx = 2. / width;
+        let sy = -2. / height; // negative to flip Y axis
+        let sz = 2. / (far - near);
+        let tx = -1.;
+        let ty = 1.;
+        let tz = -(far + near) / (far - near);
+
+        Mat4 {
+            cols: [
+                Vec4::from([sx, 0., 0., 0.]),
+                Vec4::from([0., sy, 0., 0.]),
+                Vec4::from([0., 0., sz, 0.]),
+                Vec4::from([tx, ty, tz, 1.]),
+            ],
+        }
+    }
+
+    pub fn draw_quad_instances(&self, instances: &[QuadInstance]) {
+        if let Some(r) = &self.quad_renderer {
+            r.draw_quad_instances(self.matrix, instances);
         }
     }
 }

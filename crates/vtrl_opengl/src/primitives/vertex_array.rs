@@ -1,6 +1,8 @@
 extern crate gl;
-use super::{IndexBuffer, VertexBuffer};
-use crate::UniformType;
+
+use super::index_buffer::IndexBuffer;
+use super::vertex_buffer::VertexBuffer;
+use crate::types::*;
 use std::ffi::c_void;
 use vtrl_common::prelude::*;
 
@@ -29,9 +31,13 @@ pub struct VertexArray {
 }
 
 impl VertexArray {
-    pub unsafe fn new() -> Self {
+    pub fn new() -> Self {
         let mut id: u32 = 0;
-        gl::CreateVertexArrays(1, &mut id);
+
+        unsafe {
+            gl::CreateVertexArrays(1, &mut id);
+        }
+
         VertexArray {
             id,
             vertex_count: 0,
@@ -40,7 +46,7 @@ impl VertexArray {
         }
     }
 
-    pub unsafe fn link_attributes(
+    pub fn link_attributes(
         &self,
         vbo: &VertexBuffer,
         layout: u32,
@@ -51,29 +57,36 @@ impl VertexArray {
     ) {
         self.bind();
         vbo.bind();
-        gl::VertexAttribPointer(
-            layout,
-            num_components,
-            attrib_type,
-            gl::FALSE,
-            stride,
-            offset,
-        );
-        gl::EnableVertexAttribArray(layout);
+
+        unsafe {
+            gl::VertexAttribPointer(
+                layout,
+                num_components,
+                attrib_type,
+                gl::FALSE,
+                stride,
+                offset,
+            );
+            gl::EnableVertexAttribArray(layout);
+        }
 
         vbo.unbind();
         self.unbind();
     }
 
-    pub unsafe fn bind(&self) {
-        gl::BindVertexArray(self.id);
+    pub fn bind(&self) {
+        unsafe {
+            gl::BindVertexArray(self.id);
+        }
     }
 
-    pub unsafe fn unbind(&self) {
-        gl::BindVertexArray(0);
+    pub fn unbind(&self) {
+        unsafe {
+            gl::BindVertexArray(0);
+        }
     }
 
-    pub unsafe fn destroy(&self) {
+    pub fn destroy(&self) {
         self.index_buffer.destroy();
 
         for vbo in self.vertex_buffers.iter() {
@@ -81,7 +94,10 @@ impl VertexArray {
         }
 
         self.unbind();
-        gl::DeleteVertexArrays(1, &self.id as *const u32);
+
+        unsafe {
+            gl::DeleteVertexArrays(1, &self.id as *const u32);
+        }
     }
 
     pub fn set_index_buffer(&mut self, buf: IndexBuffer) {
@@ -92,7 +108,7 @@ impl VertexArray {
         &self.index_buffer
     }
 
-    pub unsafe fn add_vertex_buffer(&mut self, buf: VertexBuffer) {
+    pub fn add_vertex_buffer(&mut self, buf: VertexBuffer) {
         let layout = &buf.layout;
         if layout.get_elements().is_empty() {
             log::error!("Tried to add a vertex buffer with no layout! {:?}", buf);
@@ -106,31 +122,34 @@ impl VertexArray {
         for element in layout.get_elements().iter() {
             use UniformType::*;
 
-            gl::EnableVertexAttribArray(element.layout);
-            match element.element_type {
-                Float | Vec2 | Vec3 | Vec4 => {
-                    gl::VertexAttribPointer(
-                        element.layout,
-                        element.element_type.num_components(),
-                        element.element_type.into(),
-                        if element.normalized {
-                            gl::TRUE
-                        } else {
-                            gl::FALSE
-                        },
-                        layout.stride,
-                        element.offset as *const c_void,
-                    );
+            unsafe {
+                gl::EnableVertexAttribArray(element.layout);
+                match element.element_type {
+                    Float | Vec2 | Vec3 | Vec4 => {
+                        gl::VertexAttribPointer(
+                            element.layout,
+                            element.element_type.num_components(),
+                            element.element_type.into(),
+                            if element.normalized {
+                                gl::TRUE
+                            } else {
+                                gl::FALSE
+                            },
+                            layout.stride,
+                            element.offset as *const c_void,
+                        );
+                    }
+                    Int | Bool => {
+                        gl::VertexAttribIPointer(
+                            element.layout,
+                            element.element_type.num_components(),
+                            element.element_type.into(),
+                            layout.stride,
+                            element.offset as *const c_void,
+                        );
+                    }
                 }
-                Int | Bool => {
-                    gl::VertexAttribIPointer(
-                        element.layout,
-                        element.element_type.num_components(),
-                        element.element_type.into(),
-                        layout.stride,
-                        element.offset as *const c_void,
-                    );
-                }
+                gl::VertexAttribDivisor(element.layout, element.divisor);
             }
         }
 
