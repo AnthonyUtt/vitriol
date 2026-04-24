@@ -1,8 +1,8 @@
 extern crate gl;
 
-use vtrl_common::prelude::*;
 use gl::types::GLenum;
 use ultraviolet::{Mat4, Vec4};
+use vtrl_common::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct Shader {
@@ -202,7 +202,9 @@ impl ShaderProgram {
             let log = std::str::from_utf8(&log).unwrap_or("Unknown error!");
             log::error!(
                 "Error while compiling shader: {}, type: {:?}, src: {}",
-                log, shader_type, code
+                log,
+                shader_type,
+                code
             );
 
             // Clean up since something went wrong

@@ -1,11 +1,14 @@
 use std::any::Any;
 use std::cell::{Ref, RefMut};
 use std::collections::VecDeque;
+use std::rc::Rc;
 
 use crate::component::*;
 use crate::entity::Entity;
 use crate::query::*;
 use crate::resource::ResourceStorage;
+use crate::schedule::*;
+use crate::service::Service;
 
 pub struct EntityBuilder<'a> {
     world: &'a mut World,
@@ -45,6 +48,7 @@ pub struct World {
 
     components: ComponentStorage,
     resources: ResourceStorage,
+    schedule: Schedule,
 }
 
 impl World {
@@ -56,6 +60,7 @@ impl World {
             alive_count: 0,
             components: ComponentStorage::new(),
             resources: ResourceStorage::new(),
+            schedule: Schedule::new(),
         }
     }
 
@@ -165,6 +170,14 @@ impl World {
 
     pub fn view_mut<F: QueryFetchMut, Fi: QueryFilter>(&self) -> QueryMut<'_, F, Fi> {
         self.components.query_mut::<F, Fi>(self)
+    }
+
+    pub fn add_service(&mut self, slot: ScheduleSlot, service: impl Service) {
+        self.schedule.add_service(slot, service);
+    }
+
+    pub fn services_for_slot(&self, slot: ScheduleSlot) -> Vec<Rc<dyn Service>> {
+        self.schedule.services_for_slot(slot)
     }
 }
 

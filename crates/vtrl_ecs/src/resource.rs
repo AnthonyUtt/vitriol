@@ -1,5 +1,5 @@
 use std::any::{Any, TypeId};
-use std::cell::{Ref, RefMut, RefCell};
+use std::cell::{Ref, RefCell, RefMut};
 use std::collections::HashMap;
 
 #[derive(Debug, Default)]
@@ -14,17 +14,22 @@ impl ResourceStorage {
 
     pub fn add(&mut self, resource: impl Any) {
         let type_id = resource.type_id();
-        self.storage.insert(type_id, Box::new(RefCell::new(resource)));
+        self.storage
+            .insert(type_id, Box::new(RefCell::new(resource)));
     }
 
     pub fn get<T: Any>(&self) -> Option<Ref<'_, T>> {
         let type_id = TypeId::of::<T>();
-        self.storage.get(&type_id).map(|val| Ref::map(val.borrow(), |i| i.downcast_ref::<T>().unwrap()))
+        self.storage
+            .get(&type_id)
+            .map(|val| Ref::map(val.borrow(), |i| i.downcast_ref::<T>().unwrap()))
     }
 
     pub fn get_mut<T: Any>(&self) -> Option<RefMut<'_, T>> {
         let type_id = TypeId::of::<T>();
-        self.storage.get(&type_id).map(|val| RefMut::map(val.borrow_mut(), |i| i.downcast_mut::<T>().unwrap()))
+        self.storage
+            .get(&type_id)
+            .map(|val| RefMut::map(val.borrow_mut(), |i| i.downcast_mut::<T>().unwrap()))
     }
 
     pub fn delete<T: Any>(&mut self) {

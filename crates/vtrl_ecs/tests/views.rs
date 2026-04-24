@@ -77,7 +77,8 @@ fn view_with_mutable_component() {
     let entity = world.spawn().with_component(Position(0.0, 0.0)).id();
 
     {
-        let mut view: Vec<(Entity, RefMut<'_, Position>)> = world.view_mut::<Position, ()>().iter().collect();
+        let mut view: Vec<(Entity, RefMut<'_, Position>)> =
+            world.view_mut::<Position, ()>().iter().collect();
         assert_eq!(view.len(), 1);
 
         let (e, ref mut pos) = view[0];

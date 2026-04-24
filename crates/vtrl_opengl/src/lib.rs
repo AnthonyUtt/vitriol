@@ -5,10 +5,10 @@ mod primitives;
 mod shaders;
 
 pub mod prelude {
+    pub use crate::UniformType;
     pub use crate::commands;
     pub use crate::primitives::*;
     pub use crate::shaders::*;
-    pub use crate::UniformType;
 }
 
 #[derive(Debug, Copy, Clone)]

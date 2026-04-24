@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
-use vtrl_ecs::prelude::*;
+use crate::service::Service;
 
 #[derive(Eq, Hash, PartialEq)]
 pub enum ScheduleSlot {
@@ -26,7 +26,7 @@ pub enum ScheduleSlot {
 }
 
 pub struct Schedule {
-    inner: HashMap<ScheduleSlot, Vec<Box<dyn Service>>>,
+    inner: HashMap<ScheduleSlot, Vec<Rc<dyn Service>>>,
 }
 
 impl Schedule {
@@ -37,14 +37,12 @@ impl Schedule {
     }
 
     pub fn add_service(&mut self, slot: ScheduleSlot, service: impl Service) {
-        let existing_services = self.inner
-            .entry(slot)
-            .or_default();
-        existing_services.push(Box::new(service));
+        let existing_services = self.inner.entry(slot).or_default();
+        existing_services.push(Rc::new(service));
     }
 
-    pub fn services_for_slot(&self, slot: ScheduleSlot) -> &[Box<dyn Service>] {
-        self.inner.get(&slot).map(|vec| vec.as_slice()).unwrap_or(&[])
+    pub fn services_for_slot(&self, slot: ScheduleSlot) -> Vec<Rc<dyn Service>> {
+        self.inner.get(&slot).cloned().unwrap_or(vec![])
     }
 }
 

@@ -1,5 +1,5 @@
-use vtrl_core::prelude::*;
 use rand::prelude::*;
+use vtrl_core::prelude::*;
 
 #[derive(Component)]
 struct Position(pub f32, pub f32);
@@ -9,10 +9,12 @@ struct Size(pub f32, pub f32);
 
 fn main() -> Result<()> {
     App::new()
+        .with_default_plugins()
         .with_service(ScheduleSlot::Init, move |world: &mut World| {
             let mut rng = rand::rng();
             for _ in 0..100_000 {
-                world.spawn()
+                world
+                    .spawn()
                     .with_component(Position(rng.random::<f32>(), rng.random::<f32>()))
                     .with_component(Size(rng.random::<f32>(), rng.random::<f32>()));
             }

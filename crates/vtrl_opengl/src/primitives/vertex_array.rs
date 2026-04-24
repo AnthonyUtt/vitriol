@@ -1,8 +1,8 @@
 extern crate gl;
-use crate::UniformType;
 use super::{IndexBuffer, VertexBuffer};
-use vtrl_common::prelude::*;
+use crate::UniformType;
 use std::ffi::c_void;
+use vtrl_common::prelude::*;
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]

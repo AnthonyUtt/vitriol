@@ -747,15 +747,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "vtrl_2d"
-version = "0.1.0"
-dependencies = [
- "ultraviolet",
- "vtrl_common",
- "vtrl_opengl",
-]
-
-[[package]]
 name = "vtrl_common"
 version = "0.1.0"
 dependencies = [

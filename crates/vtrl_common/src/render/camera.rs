@@ -1,6 +1,6 @@
 use ultraviolet::{
-    projection::{orthographic_gl, perspective_gl},
     Mat4, Vec3,
+    projection::{orthographic_gl, perspective_gl},
 };
 
 /// Defines the methods required for a functional camera object within
