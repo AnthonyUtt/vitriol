@@ -1545,6 +1545,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "vtrl_2d"
+version = "0.1.0"
+dependencies = [
+ "vtrl_common",
+ "vtrl_ecs",
+ "vtrl_opengl",
+]
+
+[[package]]
 name = "vtrl_common"
 version = "0.1.0"
 dependencies = [
