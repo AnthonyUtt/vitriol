@@ -8,6 +8,8 @@ use std::{
 
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
+use vtrl_plugins::prelude::*;
+use vtrl_opengl::prelude::*;
 
 use crate::plugin::*;
 
@@ -93,22 +95,25 @@ impl App {
         self
     }
 
-    pub fn with_service(mut self, slot: ScheduleSlot, service: impl Service) -> Self {
-        self.world.add_service(slot, service);
+    pub fn with_system(mut self, slot: ScheduleSlot, system: impl System) -> Self {
+        self.world.add_system(slot, system);
         self
     }
 
     fn run_stage(&mut self, slot: ScheduleSlot) {
-        let services = self.world.services_for_slot(slot);
-        for service in services.iter() {
-            service(&mut self.world);
+        let systems = self.world.systems_for_slot(slot);
+        for system in systems.iter() {
+            system(&mut self.world);
         }
     }
 
     fn bootstrap(&mut self) {
+        render_context::init(WindowSettings::default())
+            .expect("Unable to initialize render context!");
         self.plugins.bootstrap(&mut self.world);
 
-        self.world.add_service(ScheduleSlot::Last, |_| {
+        self.world.add_system(ScheduleSlot::Last, |_| {
+            render_context::process_events();
             let _ = message_bus::process_messages(None);
         });
     }

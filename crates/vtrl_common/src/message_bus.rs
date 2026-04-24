@@ -123,8 +123,6 @@ impl MessageBus {
         match self.handlers.write() {
             Ok(mut handlers) => {
                 for envelope in mail {
-                    log::trace!("Processing message {}", envelope.id);
-
                     if let Some(ttl) = envelope.message.ttl()
                         && Instant::now() - envelope.timestamp > ttl
                     {

@@ -1,7 +1,8 @@
 extern crate gl;
 
+use vtrl_common::prelude::*;
+
 use super::primitives::VertexArray;
-use ultraviolet::IVec2;
 
 pub unsafe fn init() {
     gl::Enable(gl::BLEND);

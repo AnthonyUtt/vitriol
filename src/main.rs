@@ -10,7 +10,7 @@ struct Size(pub f32, pub f32);
 fn main() -> Result<()> {
     App::new()
         .with_default_plugins()
-        .with_service(ScheduleSlot::Init, move |world: &mut World| {
+        .with_system(ScheduleSlot::Init, move |world: &mut World| {
             let mut rng = rand::rng();
             for _ in 0..100_000 {
                 world
@@ -19,7 +19,7 @@ fn main() -> Result<()> {
                     .with_component(Size(rng.random::<f32>(), rng.random::<f32>()));
             }
         })
-        .with_service(ScheduleSlot::Update, |world: &mut World| {
+        .with_system(ScheduleSlot::Update, |world: &mut World| {
             let mut rng = rand::rng();
             let entities = world.view_mut::<(Position, Size), ()>();
             for (_, (ref mut pos, ref mut size)) in entities.iter() {

@@ -1,12 +1,14 @@
-use ultraviolet::{Vec2, Vec3, Vec4};
+use vtrl_common::prelude::*;
 
 pub mod commands;
+pub mod context;
 mod primitives;
 mod shaders;
 
 pub mod prelude {
     pub use crate::UniformType;
     pub use crate::commands;
+    pub use crate::context as render_context;
     pub use crate::primitives::*;
     pub use crate::shaders::*;
 }

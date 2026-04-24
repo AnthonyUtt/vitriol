@@ -1,7 +1,6 @@
 extern crate gl;
 
 use gl::types::GLenum;
-use ultraviolet::{Mat4, Vec4};
 use vtrl_common::prelude::*;
 
 #[derive(Clone, Debug)]

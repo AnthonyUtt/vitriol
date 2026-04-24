@@ -13,13 +13,13 @@ pub mod prelude {
     pub use crate::query::{With, Without};
     pub use crate::resource::*;
     pub use crate::schedule::*;
-    pub use crate::service::*;
     pub use crate::world::*;
     pub use vtrl_ecs_macros::Component;
-}
 
-mod service {
-    use crate::world::World;
-    pub trait Service: Fn(&mut World) + 'static {}
-    impl<T: Fn(&mut World) + 'static> Service for T {}
+    pub trait Plugin {
+        fn build(&self, world: &mut World);
+    }
+
+    pub trait System: Fn(&mut World) + 'static {}
+    impl<T: Fn(&mut World) + 'static> System for T {}
 }

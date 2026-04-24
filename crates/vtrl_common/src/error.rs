@@ -8,6 +8,9 @@ pub enum VtrlError {
     #[error("Renderer Error: {0}")]
     Renderer(String),
 
+    #[error("Window Error: {0}")]
+    Window(String),
+
     #[error(transparent)]
     Unknown(#[from] anyhow::Error),
 }

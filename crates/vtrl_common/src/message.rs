@@ -65,3 +65,36 @@ impl Message for SystemMessage {
         self
     }
 }
+
+#[derive(Debug)]
+pub enum WindowMessage {
+    Reposition(u32, u32),
+    Resize(u32, u32),
+    Refresh,
+    Focus(bool),
+    Minimize(bool),
+    Maximize(bool),
+    FramebufferResize(u32, u32),
+    MouseButton(u32, bool),
+    CursorPosition(u32, u32),
+    CursorEnter(bool),
+    Scroll(f64, f64),
+    Key(u32, bool),
+    Char(char),
+    CharModifiers(char),
+    FileDropped(Vec<std::path::PathBuf>),
+    ContentScale(f32, f32),
+}
+
+impl Message for WindowMessage {
+    fn category(&self) -> Option<&str> {
+        Some("window")
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}

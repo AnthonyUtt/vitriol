@@ -8,7 +8,7 @@ use crate::entity::Entity;
 use crate::query::*;
 use crate::resource::ResourceStorage;
 use crate::schedule::*;
-use crate::service::Service;
+use crate::prelude::System;
 
 pub struct EntityBuilder<'a> {
     world: &'a mut World,
@@ -172,12 +172,12 @@ impl World {
         self.components.query_mut::<F, Fi>(self)
     }
 
-    pub fn add_service(&mut self, slot: ScheduleSlot, service: impl Service) {
-        self.schedule.add_service(slot, service);
+    pub fn add_system(&mut self, slot: ScheduleSlot, system: impl System) {
+        self.schedule.add_system(slot, system);
     }
 
-    pub fn services_for_slot(&self, slot: ScheduleSlot) -> Vec<Rc<dyn Service>> {
-        self.schedule.services_for_slot(slot)
+    pub fn systems_for_slot(&self, slot: ScheduleSlot) -> Vec<Rc<dyn System>> {
+        self.schedule.systems_for_slot(slot)
     }
 }
 

@@ -3,13 +3,6 @@ use std::collections::HashMap;
 
 use vtrl_ecs::prelude::*;
 
-mod time;
-pub use time::*;
-
-pub trait Plugin {
-    fn build(&self, world: &mut World);
-}
-
 pub struct PluginStorage {
     storage: HashMap<TypeId, Box<dyn Plugin>>,
 }

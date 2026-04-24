@@ -2,8 +2,6 @@ use std::time::Instant;
 
 use vtrl_ecs::prelude::*;
 
-use super::Plugin;
-
 pub struct TimePlugin;
 
 impl Plugin for TimePlugin {
@@ -12,7 +10,7 @@ impl Plugin for TimePlugin {
         world.add_resource(LastFrameTime(Instant::now()));
         world.add_resource(FrameRate(0.0));
 
-        world.add_service(ScheduleSlot::First, |w| {
+        world.add_system(ScheduleSlot::First, |w| {
             let current_frame_time = Instant::now();
             let mut lft = w.get_resource_mut::<LastFrameTime>().unwrap();
             let mut dt = w.get_resource_mut::<DeltaTime>().unwrap();
