@@ -40,6 +40,14 @@ pub fn clear(r: f32, g: f32, b: f32, a: f32) {
     }
 }
 
+pub fn register_texture(texture: &TextureData) -> Result<usize> {
+    RENDER_CONTEXT.lock().unwrap().register_texture(texture)
+}
+
+pub fn compute_uv(texture_id: usize, uv: Vec4) -> Vec4 {
+    RENDER_CONTEXT.lock().unwrap().compute_uv(texture_id, uv)
+}
+
 pub fn draw_quad_instances(instances: &[QuadInstance]) {
     if let Ok(ctx) = RENDER_CONTEXT.lock() {
         ctx.draw_quad_instances(instances);
@@ -254,6 +262,24 @@ impl RenderContext {
                 Vec4::from([0., 0., sz, 0.]),
                 Vec4::from([tx, ty, tz, 1.]),
             ],
+        }
+    }
+
+    pub fn register_texture(&mut self, texture: &TextureData) -> Result<usize> {
+        if let Some(r) = &mut self.quad_renderer {
+            r.register_texture(texture)
+        } else {
+            Err(VtrlError::Renderer(
+                "Quad renderer not initialized!".to_string(),
+            ))
+        }
+    }
+
+    pub fn compute_uv(&self, texture_id: usize, uv: Vec4) -> Vec4 {
+        if let Some(r) = &self.quad_renderer {
+            r.compute_uv(texture_id, uv)
+        } else {
+            Vec4::new(0., 0., 1., 1.)
         }
     }
 

@@ -7,13 +7,13 @@ layout (location = 3) in float iRot;
 layout (location = 4) in float iZIndex;
 layout (location = 5) in vec4 iColor;
 layout (location = 6) in vec4 iUV; // u0,v0,u1,v1
-layout (location = 7) in int iTexIdx;
+layout (location = 7) in float iTexIdx;
 
 uniform mat4 uOrtho; // top-left origin ortho
 
 out vec2 v_uv;
 out vec4 v_color;
-flat out int v_texIdx;
+out float v_texIdx;
 
 void main()
 {

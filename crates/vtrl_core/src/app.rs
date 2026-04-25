@@ -17,11 +17,25 @@ pub struct App {
     should_close: Arc<AtomicBool>,
     plugins: PluginStorage,
     world: World,
+    assets: AssetManager,
 }
 
 impl App {
     pub fn new() -> App {
-        env_logger::init();
+        {
+            use env_logger::Env;
+
+            #[cfg(debug_assertions)]
+            let filter = "warn,vitriol=debug,vtrl=debug";
+
+            #[cfg(not(debug_assertions))]
+            let filter = "warn";
+
+            let env = Env::default().default_filter_or(filter);
+            let mut logger = env_logger::Builder::from_env(env);
+            logger.init();
+        }
+
         log::info!("Initializing VITRIOL Engine...");
 
         let should_close = Arc::new(AtomicBool::new(false));
@@ -46,6 +60,7 @@ impl App {
             should_close,
             plugins: PluginStorage::default(),
             world: World::new(),
+            assets: AssetManager::new(),
         }
     }
 
@@ -104,7 +119,7 @@ impl App {
     fn run_stage(&mut self, slot: ScheduleSlot) {
         let systems = self.world.systems_for_slot(slot);
         for system in systems.iter() {
-            system(&mut self.world);
+            system(&mut self.world, &mut self.assets);
         }
     }
 
@@ -113,7 +128,7 @@ impl App {
             .expect("Unable to initialize render context!");
         self.plugins.bootstrap(&mut self.world);
 
-        self.world.add_system(ScheduleSlot::Last, |_| {
+        self.world.add_system(ScheduleSlot::Last, |_, _| {
             render_context::process_events();
             let _ = message_bus::process_messages(None);
         });

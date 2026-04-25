@@ -11,6 +11,12 @@ pub enum VtrlError {
     #[error("Window Error: {0}")]
     Window(String),
 
+    #[error("Lock Error: {0}")]
+    Lock(String),
+
+    #[error(transparent)]
+    Image(#[from] image::ImageError),
+
     #[error(transparent)]
     Unknown(#[from] anyhow::Error),
 }

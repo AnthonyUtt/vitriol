@@ -10,7 +10,7 @@ impl Plugin for TimePlugin {
         world.add_resource(LastFrameTime(Instant::now()));
         world.add_resource(FrameRate(0.0));
 
-        world.add_system(ScheduleSlot::First, |w| {
+        world.add_system(ScheduleSlot::First, |w, _| {
             let current_frame_time = Instant::now();
             let mut lft = w.get_resource_mut::<LastFrameTime>().unwrap();
             let mut dt = w.get_resource_mut::<DeltaTime>().unwrap();

@@ -103,5 +103,5 @@ pub struct QuadInstance {
     pub z: f32,
     pub color: Vec4,
     pub uv: Vec4,
-    pub tex: u32,
+    pub tex: f32,
 }

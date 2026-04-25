@@ -20,6 +20,7 @@ pub mod prelude {
         fn build(&self, world: &mut World);
     }
 
-    pub trait System: Fn(&mut World) + 'static {}
-    impl<T: Fn(&mut World) + 'static> System for T {}
+    use vtrl_common::prelude::AssetManager;
+    pub trait System: Fn(&mut World, &mut AssetManager) + 'static {}
+    impl<T: Fn(&mut World, &mut AssetManager) + 'static> System for T {}
 }

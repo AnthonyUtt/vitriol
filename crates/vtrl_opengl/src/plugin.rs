@@ -8,25 +8,26 @@ pub struct Renderer2DPlugin;
 
 impl Plugin for Renderer2DPlugin {
     fn build(&self, world: &mut World) {
-        world.add_system(ScheduleSlot::PostUpdate, |w| {
+        world.add_system(ScheduleSlot::PostUpdate, |w, _| {
             let view = w.view::<QuadComponent, ()>();
             let mut instances: Vec<QuadInstance> = Vec::new();
             for (_, quad) in view.iter() {
+                let uv = context::compute_uv(quad.texture_id as usize, quad.uv);
                 instances.push(QuadInstance {
                     pos: quad.position,
                     size: quad.size,
                     rot: quad.rotation,
                     z: quad.z_index,
                     color: quad.color,
-                    uv: quad.uv,
-                    tex: quad.texture_id,
+                    uv,
+                    tex: quad.texture_id as f32,
                 });
             }
 
             context::draw_quad_instances(instances.as_slice());
         });
 
-        world.add_system(ScheduleSlot::PreUpdate, |_| {
+        world.add_system(ScheduleSlot::PreUpdate, |_, _| {
             context::clear(0.5, 0.3, 0.7, 1.);
         });
     }

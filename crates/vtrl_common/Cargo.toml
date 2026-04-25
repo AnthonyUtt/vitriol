@@ -13,3 +13,6 @@ bilge.workspace = true
 ultraviolet.workspace = true
 serde.workspace = true
 serde_derive.workspace = true
+lazy_static.workspace = true
+string-interner.workspace = true
+image.workspace = true
