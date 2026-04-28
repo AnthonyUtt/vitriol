@@ -31,6 +31,12 @@ impl Default for TransformComponent {
 }
 
 #[derive(Component)]
+pub struct VelocityComponent {
+    pub direction: Vec2,
+    pub speed: f32,
+}
+
+#[derive(Component)]
 pub struct QuadComponent {
     pub size: Vec2,
     pub color: Vec4,
@@ -46,6 +52,7 @@ pub struct SpriteComponent {
 
 #[derive(Component)]
 pub struct AnimationComponent {
+    pub texture_handle: Symbol,
     pub current_frame: usize,
     pub active_animation: Arc<str>,
     pub elapsed: f32,

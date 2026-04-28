@@ -42,13 +42,12 @@ impl Plugin for Renderer2DPlugin {
             let view = w.view::<(SpriteComponent, TransformComponent), ()>();
             let mut instances: Vec<QuadInstance> = Vec::new();
             for (entity, (sprite, xform)) in view.iter() {
-                let tex_id: u32 = mgr.get::<Texture>(sprite.texture_handle)
-                    .map(|t| t.id)
-                    .unwrap_or(0);
-
-                let uv = if w.has_component::<AnimationComponent>(entity) {
+                let (tex_id, uv) = if w.has_component::<AnimationComponent>(entity) {
                     let mut anim = w.get_component_mut::<AnimationComponent>(entity)
                         .unwrap();
+                    let tex_id: u32 = mgr.get::<Texture>(anim.texture_handle)
+                        .map(|t| t.id)
+                        .unwrap_or(0);
                     let frames = animations.get(anim.active_animation.to_string()).unwrap();
                     let frame = frames[anim.current_frame];
 
@@ -62,9 +61,13 @@ impl Plugin for Renderer2DPlugin {
                         }
                     }
 
-                    frames[anim.current_frame].uv
+                    (tex_id, frames[anim.current_frame].uv)
                 } else {
-                    sprite.uv
+                    let tex_id: u32 = mgr.get::<Texture>(sprite.texture_handle)
+                        .map(|t| t.id)
+                        .unwrap_or(0);
+
+                    (tex_id, sprite.uv)
                 };
                 let uv = context::compute_uv(tex_id as usize, uv);
 
