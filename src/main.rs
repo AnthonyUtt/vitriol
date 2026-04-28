@@ -1,4 +1,3 @@
-use rand::prelude::*;
 use std::path::Path;
 
 use vtrl_core::prelude::*;
@@ -44,6 +43,11 @@ impl Direction {
 fn main() -> Result<()> {
     App::new()
         .with_default_plugins()
+        .with_system(ScheduleSlot::First, |w, _| {
+            let fps = w.get_resource::<FrameRate>().unwrap().0;
+            // Add FPS to debug overlay in game window
+            debug_println!("FPS: {fps:.1}");
+        })
         .with_system(ScheduleSlot::Init, |world, asset_mgr| {
             let walk_path = Path::new("./src/assets/walk.png");
             let (walk_handle, _) = asset_mgr
@@ -56,6 +60,7 @@ fn main() -> Result<()> {
                 .unwrap();
 
             {
+                // TODO: load these animations from a file
                 let mut store = world.get_resource_mut::<AnimationStore>().unwrap();
                 let frames = |row: u32, flip: bool| {
                     let y_offset = row as f32 * 0.2;
@@ -105,6 +110,7 @@ fn main() -> Result<()> {
 
             world
                 .spawn()
+                .with_component(PlayerTag)
                 .with_component(TransformComponent {
                     position: Vec2::new(540., 260.),
                     scale: Vec2::one(),
@@ -131,24 +137,7 @@ fn main() -> Result<()> {
                 .with_component(PlayerSpritesheets {
                     walk: walk_handle,
                     idle: idle_handle,
-                })
-                .with_component(PlayerTag);
-        })
-        .with_system(ScheduleSlot::Update, |w, _| {
-            let mut rng = rand::rng();
-            let view = w.view_mut::<QuadComponent, ()>();
-            for (_, mut quad) in view.iter() {
-                quad.color = Vec4::new(
-                    rng.random::<f32>(),
-                    rng.random::<f32>(),
-                    rng.random::<f32>(),
-                    1.,
-                );
-            }
-        })
-        .with_system(ScheduleSlot::First, |w, _| {
-            let fps = w.get_resource::<FrameRate>().unwrap().0;
-            debug_println!("FPS: {fps:.1}");
+                });
         })
         .with_system(ScheduleSlot::Update, |w, _| {
             let dt = w.get_resource::<DeltaTime>().unwrap().0;
