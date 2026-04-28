@@ -1635,8 +1635,10 @@ dependencies = [
  "lazy_static",
  "serde",
  "serde_derive",
+ "string-interner",
  "vtrl_common",
  "vtrl_ecs",
+ "vtrl_plugins",
 ]
 
 [[package]]

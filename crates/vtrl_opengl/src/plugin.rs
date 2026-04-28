@@ -1,6 +1,8 @@
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
+use vtrl_plugins::prelude::*;
 
+use crate::animations::*;
 use crate::context;
 use crate::primitives::*;
 
@@ -8,7 +10,12 @@ pub struct Renderer2DPlugin;
 
 impl Plugin for Renderer2DPlugin {
     fn build(&self, world: &mut World) {
+        world.add_resource(AnimationStore::default());
+
         world.add_system(ScheduleSlot::Render, |w, mgr| {
+            let animations = w.get_resource::<AnimationStore>().unwrap();
+            let dt = w.get_resource::<DeltaTime>().unwrap().0;
+
             context::push_command(RenderCommand::BeginPass {
                 name: "world",
                 target: RenderTarget::Screen,
@@ -34,11 +41,33 @@ impl Plugin for Renderer2DPlugin {
 
             let view = w.view::<(SpriteComponent, TransformComponent), ()>();
             let mut instances: Vec<QuadInstance> = Vec::new();
-            for (_, (sprite, xform)) in view.iter() {
+            for (entity, (sprite, xform)) in view.iter() {
                 let tex_id: u32 = mgr.get::<Texture>(sprite.texture_handle)
                     .map(|t| t.id)
                     .unwrap_or(0);
-                let uv = context::compute_uv(tex_id as usize, sprite.uv);
+
+                let uv = if w.has_component::<AnimationComponent>(entity) {
+                    let mut anim = w.get_component_mut::<AnimationComponent>(entity)
+                        .unwrap();
+                    let frames = animations.get(anim.active_animation.to_string()).unwrap();
+                    let frame = frames[anim.current_frame];
+
+                    // update animation timing & frame if necessary
+                    anim.elapsed += dt;
+                    if anim.elapsed >= frame.duration {
+                        anim.elapsed = 0.;
+                        anim.current_frame += 1;
+                        if anim.current_frame >= frames.len() {
+                            anim.current_frame = 0;
+                        }
+                    }
+
+                    frames[anim.current_frame].uv
+                } else {
+                    sprite.uv
+                };
+                let uv = context::compute_uv(tex_id as usize, uv);
+
                 instances.push(QuadInstance {
                     pos: xform.position,
                     size: sprite.size * xform.scale,
@@ -67,7 +96,7 @@ impl Plugin for Renderer2DPlugin {
             context::push_command(RenderCommand::DrawText { instances: instances.into() });
         });
 
-        world.add_system(ScheduleSlot::PostRender, |_, _| {
+        world.add_system(ScheduleSlot::Last, |_, _| {
             context::process_queue();
         });
     }

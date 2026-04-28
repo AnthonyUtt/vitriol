@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 vtrl_common = { path = "../vtrl_common" }
 vtrl_ecs = { path = "../vtrl_ecs" }
+vtrl_plugins = { path = "../vtrl_plugins" }
 gl.workspace = true
 glfw.workspace = true
 lazy_static.workspace = true
@@ -13,3 +14,4 @@ image.workspace = true
 serde.workspace = true
 serde_derive.workspace = true
 freetype-rs.workspace = true
+string-interner.workspace = true
