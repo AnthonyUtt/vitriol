@@ -3,9 +3,6 @@ use std::path::Path;
 
 use vtrl_core::prelude::*;
 
-#[derive(Component)]
-struct Ignore;
-
 fn main() -> Result<()> {
     App::new()
         .with_default_plugins()
@@ -20,43 +17,47 @@ fn main() -> Result<()> {
             for i in 0..quad_count {
                 let x = i / col_count;
                 let y = i % col_count;
-                world.spawn().with_component(QuadComponent {
-                    position: Vec2::new(x as f32 * quad_size, y as f32 * quad_size),
-                    size: Vec2::new(quad_size, quad_size),
-                    rotation: 0.,
-                    z_index: 0.,
-                    color: Vec4::new(
-                        rng.random::<f32>(),
-                        rng.random::<f32>(),
-                        rng.random::<f32>(),
-                        1.,
-                    ),
-                    uv: Vec4::zero(),
-                    texture_id: 0,
-                });
+                world.spawn()
+                    .with_component(QuadComponent {
+                        size: Vec2::new(quad_size, quad_size),
+                        color: Vec4::new(
+                            rng.random::<f32>(),
+                            rng.random::<f32>(),
+                            rng.random::<f32>(),
+                            1.,
+                        ),
+                    })
+                    .with_component(TransformComponent {
+                        position: Vec2::new(x as f32 * quad_size, y as f32 * quad_size),
+                        scale: Vec2::one(),
+                        rotation: 0.,
+                        z_index: 0.,
+                    });
             }
 
             let texture_path = Path::new("./src/assets/mandark_256x256.png");
-            let (_, tex) = asset_mgr
+            let (handle, _) = asset_mgr
                 .load::<Texture>(texture_path)
                 .expect("Unable to load texture!");
 
             world
                 .spawn()
-                .with_component(QuadComponent {
+                .with_component(TransformComponent {
                     position: Vec2::new(540., 260.),
-                    size: Vec2::new(200., 200.),
+                    scale: Vec2::one(),
                     rotation: 0.,
                     z_index: 0.1,
+                })
+                .with_component(SpriteComponent {
+                    texture_handle: handle,
+                    size: Vec2::new(200., 200.),
                     color: Vec4::one(),
                     uv: Vec4::new(0., 0., 1., 1.),
-                    texture_id: tex.id,
-                })
-                .with_component(Ignore);
+                });
         })
         .with_system(ScheduleSlot::Update, |w, _| {
             let mut rng = rand::rng();
-            let view = w.view_mut::<QuadComponent, Without<Ignore>>();
+            let view = w.view_mut::<QuadComponent, ()>();
             for (_, mut quad) in view.iter() {
                 quad.color = Vec4::new(
                     rng.random::<f32>(),
@@ -66,7 +67,7 @@ fn main() -> Result<()> {
                 );
             }
         })
-        .with_system(ScheduleSlot::Update, |w, _| {
+        .with_system(ScheduleSlot::First, |w, _| {
             let fps = w.get_resource::<FrameRate>().unwrap().0;
             debug_println!("FPS: {fps:.1}");
         })

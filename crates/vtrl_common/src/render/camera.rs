@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use ultraviolet::{
     Mat4, Vec3,
     projection::{orthographic_gl, perspective_gl},
@@ -5,7 +6,7 @@ use ultraviolet::{
 
 /// Defines the methods required for a functional camera object within
 /// the game engine
-pub trait Camera {
+pub trait TCamera: Debug + Clone + Copy {
     /// Recalculates the projection and view matrices for the camera
     fn recalculate_matrices(&mut self);
 
@@ -24,7 +25,14 @@ pub trait Camera {
     fn get_projection_view_matrix(&self) -> &Mat4;
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum Camera {
+    Orthographic(Camera2D),
+    Perpective(Camera3D),
+}
+
 /// An orthographic camera object
+#[derive(Debug, Clone, Copy)]
 pub struct Camera2D {
     projection_matrix: Mat4,
     view_matrix: Mat4,
@@ -35,6 +43,7 @@ pub struct Camera2D {
 }
 
 /// A perspective camera object
+#[derive(Debug, Clone, Copy)]
 pub struct Camera3D {
     projection_matrix: Mat4,
     view_matrix: Mat4,
@@ -76,7 +85,7 @@ impl Camera3D {
     }
 }
 
-impl Camera for Camera2D {
+impl TCamera for Camera2D {
     fn recalculate_matrices(&mut self) {
         let transform: Mat4 = Mat4::identity().translated(&self.position);
         let transform = transform * Mat4::from_rotation_z(self.rotation.z);
@@ -111,7 +120,7 @@ impl Camera for Camera2D {
     }
 }
 
-impl Camera for Camera3D {
+impl TCamera for Camera3D {
     fn recalculate_matrices(&mut self) {
         let transform: Mat4 = Mat4::identity().translated(&self.position);
         let transform =

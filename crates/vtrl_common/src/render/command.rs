@@ -5,17 +5,24 @@ use super::camera::Camera;
 
 pub type FramebufferId = u32;
 
+#[derive(Debug, Clone, Copy)]
 pub enum RenderTarget {
     Screen,
     Framebuffer(FramebufferId),
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum BlendMode {
     Alpha,
     Additive,
     Multiply,
+    PremultipliedAlpha,
+    Screen,
+    Subtract,
+    Replace,
 }
 
+#[derive(Debug, Clone)]
 pub enum RenderCommand {
     // Frame orchestration
     BeginFrame { clear_color: Vec4 },
@@ -24,9 +31,9 @@ pub enum RenderCommand {
     // Render pass orchestration
     BeginPass {
         name: &'static str,
+        target: RenderTarget,
         clear: Option<Vec4>,
         blend_mode: Option<BlendMode>,
-        camera: Option<Box<dyn Camera>>,
     },
     EndPass,
 
@@ -35,6 +42,7 @@ pub enum RenderCommand {
 
     // Rendering
     DrawQuads { instances: Arc<[QuadInstance]> },
+    DrawText { instances: Arc<[GlyphInstance]> },
 }
 
 #[repr(C)]

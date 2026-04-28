@@ -135,9 +135,6 @@ impl Renderer {
             return;
         }
 
-        // Quad frag shader emits straight (non-premultiplied) alpha.
-        unsafe { gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA) };
-
         self.quad_shader.activate();
         self.quad_shader.set_uniform_mat4("uOrtho", &matrix);
         self.texture_array.bind(0);
@@ -160,9 +157,6 @@ impl Renderer {
         if instances.is_empty() {
             return;
         }
-
-        // Text frag shader emits premultiplied alpha.
-        unsafe { gl::BlendFunc(gl::ONE, gl::ONE_MINUS_SRC_ALPHA) };
 
         self.text_shader.activate();
         self.text_shader.set_uniform_mat4("uOrtho", &matrix);

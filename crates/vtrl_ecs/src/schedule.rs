@@ -17,6 +17,9 @@ pub enum ScheduleSlot {
     PreFixedUpdate,
     FixedUpdate,
     PostFixedUpdate,
+    PreRender,
+    Render,
+    PostRender,
     Last,
 
     // Cleanup

@@ -7,5 +7,5 @@ pub(crate) mod types;
 
 pub mod prelude {
     pub use crate::context as render_context;
-    pub use crate::primitives::Texture;
+    pub use crate::primitives::*;
 }

@@ -2,55 +2,75 @@ use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
 
 use crate::context;
+use crate::primitives::*;
 
 pub struct Renderer2DPlugin;
 
 impl Plugin for Renderer2DPlugin {
     fn build(&self, world: &mut World) {
-        world.add_system(ScheduleSlot::PostUpdate, |w, _| {
-            let view = w.view::<QuadComponent, ()>();
+        world.add_system(ScheduleSlot::Render, |w, mgr| {
+            context::push_command(RenderCommand::BeginPass {
+                name: "world",
+                target: RenderTarget::Screen,
+                clear: Some(Vec4::new(0.3, 0.5, 0.6, 1.)),
+                blend_mode: Some(BlendMode::Alpha),
+            });
+
+            let view = w.view::<(QuadComponent, TransformComponent), ()>();
             let mut instances: Vec<QuadInstance> = Vec::new();
-            for (_, quad) in view.iter() {
-                let uv = context::compute_uv(quad.texture_id as usize, quad.uv);
+            for (_, (quad, xform)) in view.iter() {
                 instances.push(QuadInstance {
-                    pos: quad.position,
-                    size: quad.size,
-                    rot: quad.rotation,
-                    z: quad.z_index,
+                    pos: xform.position,
+                    size: quad.size * xform.scale,
+                    rot: xform.rotation,
+                    z: xform.z_index,
                     color: quad.color,
-                    uv,
-                    tex: quad.texture_id as f32,
+                    uv: Vec4::zero(),
+                    tex: 0.,
                 });
             }
 
-            context::draw_quad_instances(instances.as_slice());
-        });
+            context::push_command(RenderCommand::DrawQuads { instances: instances.into() });
 
-        world.add_system(ScheduleSlot::PostUpdate, |w, _| {
-            let view = w.view::<(TextComponent, Transform), ()>();
+            let view = w.view::<(SpriteComponent, TransformComponent), ()>();
+            let mut instances: Vec<QuadInstance> = Vec::new();
+            for (_, (sprite, xform)) in view.iter() {
+                let tex_id: u32 = mgr.get::<Texture>(sprite.texture_handle)
+                    .map(|t| t.id)
+                    .unwrap_or(0);
+                let uv = context::compute_uv(tex_id as usize, sprite.uv);
+                instances.push(QuadInstance {
+                    pos: xform.position,
+                    size: sprite.size * xform.scale,
+                    rot: xform.rotation,
+                    z: xform.z_index,
+                    color: sprite.color,
+                    uv,
+                    tex: tex_id as f32,
+                });
+            }
+            context::push_command(RenderCommand::DrawQuads { instances: instances.into() });
+
+            context::push_command(RenderCommand::BeginPass {
+                name: "text",
+                target: RenderTarget::Screen,
+                clear: None,
+                blend_mode: Some(BlendMode::PremultipliedAlpha),
+            });
+
+            let view = w.view::<(TextComponent, TransformComponent), ()>();
             let mut instances: Vec<GlyphInstance> = Vec::new();
             for (_, (text, xform)) in view.iter() {
                 instances.extend(layout_text(&text, &xform));
             }
 
-            context::draw_text_instances(instances.as_slice());
+            context::push_command(RenderCommand::DrawText { instances: instances.into() });
         });
 
-        world.add_system(ScheduleSlot::PreUpdate, |_, _| {
-            context::clear(0.5, 0.3, 0.7, 1.);
+        world.add_system(ScheduleSlot::PostRender, |_, _| {
+            context::process_queue();
         });
     }
-}
-
-#[derive(Component)]
-pub struct QuadComponent {
-    pub position: Vec2,
-    pub size: Vec2,
-    pub rotation: f32,
-    pub z_index: f32,
-    pub color: Vec4,
-    pub uv: Vec4,
-    pub texture_id: u32,
 }
 
 pub struct DebugOverlayPlugin {
@@ -78,15 +98,22 @@ impl Plugin for DebugOverlayPlugin {
         let padding = self.padding;
         let color = self.color;
 
-        world.add_system(ScheduleSlot::Last, move |_, _| {
+        world.add_system(ScheduleSlot::PostRender, move |_, _| {
             let lines = vtrl_common::debug::drain_lines();
             let instances = layout_overlay(&lines, anchor, style, padding, color);
-            context::draw_text_instances(instances.as_slice());
+
+            context::push_command(RenderCommand::BeginPass {
+                name: "debug",
+                target: RenderTarget::Screen,
+                clear: None,
+                blend_mode: Some(BlendMode::PremultipliedAlpha),
+            });
+            context::push_command(RenderCommand::DrawText { instances: instances.into() });
         });
     }
 }
 
-fn layout_text(_text: &TextComponent, _xform: &Transform) -> Vec<GlyphInstance> {
+fn layout_text(_text: &TextComponent, _xform: &TransformComponent) -> Vec<GlyphInstance> {
     // TODO: walk glyphs in `text.text`, splitting on '\n', advancing by
     // glyph metrics horizontally and `style.line_height * style.size`
     // vertically. Use the FreeType-backed font atlas to resolve UVs and

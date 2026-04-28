@@ -91,6 +91,10 @@ impl App {
             self.run_stage(ScheduleSlot::FixedUpdate);
             self.run_stage(ScheduleSlot::PostFixedUpdate);
 
+            self.run_stage(ScheduleSlot::PreRender);
+            self.run_stage(ScheduleSlot::Render);
+            self.run_stage(ScheduleSlot::PostRender);
+
             self.run_stage(ScheduleSlot::Last);
         }
 
@@ -110,6 +114,7 @@ impl App {
     pub fn with_default_plugins(mut self) -> Self {
         self.plugins.insert(Renderer2DPlugin);
         self.plugins.insert(TimePlugin);
+        self.plugins.insert(InputPlugin);
         #[cfg(debug_assertions)]
         self.plugins.insert(DebugOverlayPlugin::default());
         self

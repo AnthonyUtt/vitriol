@@ -12,14 +12,14 @@ pub struct TextComponent {
 }
 
 #[derive(Component)]
-pub struct Transform {
+pub struct TransformComponent {
     pub position: Vec2,
     pub rotation: f32,
     pub scale: Vec2,
     pub z_index: f32,
 }
 
-impl Default for Transform {
+impl Default for TransformComponent {
     fn default() -> Self {
         Self {
             position: Vec2::zero(),
@@ -28,4 +28,18 @@ impl Default for Transform {
             z_index: 0.0,
         }
     }
+}
+
+#[derive(Component)]
+pub struct SpriteComponent {
+    pub size: Vec2,
+    pub texture_handle: Symbol,
+    pub uv: Vec4,
+    pub color: Vec4,
+}
+
+#[derive(Component)]
+pub struct QuadComponent {
+    pub size: Vec2,
+    pub color: Vec4,
 }

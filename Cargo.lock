@@ -1643,6 +1643,9 @@ dependencies = [
 name = "vtrl_plugins"
 version = "0.1.0"
 dependencies = [
+ "glfw",
+ "once_cell",
+ "vtrl_common",
  "vtrl_ecs",
 ]
 

@@ -20,6 +20,7 @@ lazy_static! {
     static ref GLFW_INIT: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
     static ref RENDER_CONTEXT: Arc<Mutex<Box<RenderContext>>> =
         Arc::new(Mutex::new(Box::new(RenderContext::new())));
+    static ref RENDER_QUEUE: RenderQueue = RenderQueue::new();
 }
 
 pub fn init(settings: WindowSettings) -> Result<()> {
@@ -30,16 +31,19 @@ pub fn init(settings: WindowSettings) -> Result<()> {
     Ok(())
 }
 
+pub fn push_command(cmd: RenderCommand) {
+    RENDER_QUEUE.push(cmd);
+}
+
 pub fn process_events() {
     if let Ok(mut ctx) = RENDER_CONTEXT.lock() {
         ctx.process_events();
     }
 }
 
-pub fn clear(r: f32, g: f32, b: f32, a: f32) {
-    unsafe {
-        gl::ClearColor(r, g, b, a);
-        gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+pub fn process_queue() {
+    if let Ok(mut ctx) = RENDER_CONTEXT.lock() {
+        RENDER_QUEUE.process(&mut ctx);
     }
 }
 
@@ -53,18 +57,6 @@ pub fn register_font(glyphs: HashMap<char, Glyph>) -> Result<usize> {
 
 pub fn compute_uv(texture_id: usize, uv: Vec4) -> Vec4 {
     RENDER_CONTEXT.lock().unwrap().compute_uv(texture_id, uv)
-}
-
-pub fn draw_quad_instances(instances: &[QuadInstance]) {
-    if let Ok(ctx) = RENDER_CONTEXT.lock() {
-        ctx.draw_quad_instances(instances);
-    }
-}
-
-pub fn draw_text_instances(instances: &[GlyphInstance]) {
-    if let Ok(ctx) = RENDER_CONTEXT.lock() {
-        ctx.draw_text_instances(instances);
-    }
 }
 
 pub fn get_glyph(font_id: u32, c: char) -> Option<Glyph> {
@@ -258,13 +250,13 @@ impl RenderContext {
                     }
                     CursorPos(x, y) => {
                         let _ =
-                            message_bus::send(WindowMessage::CursorPosition(x as u32, y as u32));
+                            message_bus::send(WindowMessage::CursorPosition(x as f32, y as f32));
                     }
                     CursorEnter(entered) => {
                         let _ = message_bus::send(WindowMessage::CursorEnter(entered));
                     }
                     Scroll(x, y) => {
-                        let _ = message_bus::send(WindowMessage::Scroll(x, y));
+                        let _ = message_bus::send(WindowMessage::Scroll(x as f32, y as f32));
                     }
                     Key(key, _scancode, action, _mods) => {
                         let state = matches!(action, glfw::Action::Press | glfw::Action::Repeat);
@@ -347,13 +339,97 @@ impl RenderContext {
         self.window_size
     }
 
-    pub fn start_frame(&self, clear_color: Vec4) {
-        clear(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+    fn clear(&self, clear_color: Vec4) {
+        let Vec4 { x, y, z, w } = clear_color;
+        unsafe {
+            gl::ClearColor(x, y, z, w);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+        }
     }
 
-    pub fn end_frame(&self) {
+    fn set_blend_mode(&self, blend_mode: BlendMode) {
+        unsafe {
+            match blend_mode {
+                // Alpha: standard transparency
+                // src * src_alpha + dst * (1 - src_alpha)
+                BlendMode::Alpha => {
+                    gl::Enable(gl::BLEND);
+                    gl::BlendEquation(gl::FUNC_ADD);
+                    gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+                },
 
+                // Additive: glowing effects, particles, light
+                // src * src_alpha + dst * 1
+                BlendMode::Additive => {
+                    gl::Enable(gl::BLEND);
+                    gl::BlendEquation(gl::FUNC_ADD);
+                    gl::BlendFunc(gl::SRC_ALPHA, gl::ONE);
+                },
+
+                // Multiply: darkening, shadows, color mixing
+                // src * dst + dst * 0
+                BlendMode::Multiply => {
+                    gl::Enable(gl::BLEND);
+                    gl::BlendEquation(gl::FUNC_ADD);
+                    gl::BlendFunc(gl::DST_COLOR, gl::ZERO);
+                },
+
+                // Pre-multiplied alpha: RGB already mutliplied by alpha
+                // src * 1 + dst * (1 - src_alpha)
+                BlendMode::PremultipliedAlpha => {
+                    gl::Enable(gl::BLEND);
+                    gl::BlendEquation(gl::FUNC_ADD);
+                    gl::BlendFunc(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
+                },
+
+                // Screen: opposite of multiply, lightens. Good for glow, fog, light overlays
+                // src * (1 - dst) + dst * 1
+                BlendMode::Screen => {
+                    gl::Enable(gl::BLEND);
+                    gl::BlendEquation(gl::FUNC_ADD);
+                    gl::BlendFunc(gl::ONE_MINUS_DST_COLOR, gl::ONE);
+                },
+
+                // Subtract: src removes from dst. Shadows, darkening effects
+                // dst - src * src_alpha
+                BlendMode::Subtract => {
+                    gl::Enable(gl::BLEND);
+                    gl::BlendEquation(gl::FUNC_REVERSE_SUBTRACT);
+                    gl::BlendFuncSeparate(gl::SRC_ALPHA, gl::ONE, gl::ONE, gl::ONE);
+                },
+
+                // Replace: no blending, just overwrite. UI backgrounds, clear rects
+                BlendMode::Replace => {
+                    gl::Disable(gl::BLEND);
+                }
+            }
+        }
     }
+
+    pub fn begin_frame(&self, clear_color: Vec4) {
+        self.clear(clear_color);
+    }
+
+    pub fn end_frame(&self) {}
+
+    pub fn begin_pass(&mut self, name: &'static str, target: RenderTarget, clear: Option<Vec4>, blend_mode: Option<BlendMode>) {
+        log::trace!("Starting render pass: {name}");
+
+        match target {
+            RenderTarget::Framebuffer(id) => unsafe { gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, id); },
+            RenderTarget::Screen => unsafe { gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, 0); },
+        }
+
+        if let Some(color) = clear {
+            self.clear(color);
+        }
+
+        if let Some(blend) = blend_mode {
+            self.set_blend_mode(blend);
+        }
+    }
+
+    pub fn end_pass(&self) {}
 
     pub fn draw_quad_instances(&self, instances: &[QuadInstance]) {
         if let Some(r) = &self.renderer {
@@ -419,7 +495,7 @@ fn set_gl_debug_message_callback() {
     }
 }
 
-pub struct RenderQueue {
+struct RenderQueue {
     sender: Sender<RenderCommand>,
     receiver: Receiver<RenderCommand>,
 }
@@ -430,29 +506,36 @@ impl RenderQueue {
         Self { sender, receiver }
     }
 
-    pub fn push(&mut self, cmd: RenderCommand) {
+    pub fn push(&self, cmd: RenderCommand) {
         let _ = self.sender.send(cmd);
     }
 
-    pub fn process(&self, ctx: &RenderContext) {
+    pub fn process(&self, ctx: &mut RenderContext) {
         for cmd in self.receiver.try_iter() {
-            self.execute(cmd, ctx);
+            Self::execute(cmd, ctx);
         }
     }
 
-    pub fn execute(&self, cmd: RenderCommand, ctx: &RenderContext) {
+    pub fn execute(cmd: RenderCommand, ctx: &mut RenderContext) {
         match cmd {
-            RenderCommand::BeginFrame { clear_color } => {},
-            RenderCommand::EndFrame => {},
+            RenderCommand::BeginFrame { clear_color } => ctx.begin_frame(clear_color),
+            RenderCommand::EndFrame => ctx.end_frame(),
             RenderCommand::BeginPass {
                 name,
+                target,
                 clear,
                 blend_mode,
-                camera,
-            } => {},
-            RenderCommand::EndPass => {},
-            RenderCommand::Batch(batch) => {},
-            RenderCommand::DrawQuads { instances } => {},
+            } => {
+                ctx.begin_pass(name, target, clear, blend_mode);
+            },
+            RenderCommand::EndPass => ctx.end_pass(),
+            RenderCommand::Batch(batch) => {
+                for cmd in batch.iter() {
+                    Self::execute(cmd.clone(), ctx);
+                }
+            },
+            RenderCommand::DrawQuads { instances } => ctx.draw_quad_instances(&instances),
+            RenderCommand::DrawText { instances } => ctx.draw_text_instances(&instances),
         }
     }
 }
