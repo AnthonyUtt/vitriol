@@ -418,3 +418,47 @@ fn set_gl_debug_message_callback() {
         }
     }
 }
+
+pub struct RenderQueue {
+    sender: Sender<RenderCommand>,
+    receiver: Receiver<RenderCommand>,
+}
+
+impl RenderQueue {
+    pub fn new() -> Self {
+        let (sender, receiver) = unbounded();
+        Self { sender, receiver }
+    }
+
+    pub fn push(&mut self, cmd: RenderCommand) {
+        let _ = self.sender.send(cmd);
+    }
+
+    pub fn process(&self, ctx: &RenderContext) {
+        for cmd in self.receiver.try_iter() {
+            self.execute(cmd, ctx);
+        }
+    }
+
+    pub fn execute(&self, cmd: RenderCommand, ctx: &RenderContext) {
+        match cmd {
+            RenderCommand::BeginFrame { clear_color } => {},
+            RenderCommand::EndFrame => {},
+            RenderCommand::BeginPass {
+                name,
+                clear,
+                blend_mode,
+                camera,
+            } => {},
+            RenderCommand::EndPass => {},
+            RenderCommand::Batch(batch) => {},
+            RenderCommand::DrawQuads { instances } => {},
+        }
+    }
+}
+
+impl Default for RenderQueue {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -3,13 +3,13 @@ use serde_derive::*;
 mod bitmap;
 mod camera;
 mod packing;
-mod queue;
+mod command;
 mod text;
 
 pub use bitmap::*;
 pub use camera::*;
 pub use packing::*;
-pub use queue::*;
+pub use command::*;
 pub use text::*;
 
 pub struct WindowSettings {

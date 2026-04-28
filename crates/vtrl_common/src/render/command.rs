@@ -22,7 +22,12 @@ pub enum RenderCommand {
     EndFrame,
 
     // Render pass orchestration
-    BeginPass { name: &'static str, clear: Option<Vec4>, blend_mode: BlendMode, camera: Box<dyn Camera> },
+    BeginPass {
+        name: &'static str,
+        clear: Option<Vec4>,
+        blend_mode: Option<BlendMode>,
+        camera: Option<Box<dyn Camera>>,
+    },
     EndPass,
 
     // Batching
