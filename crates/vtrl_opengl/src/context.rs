@@ -150,6 +150,13 @@ impl RenderContext {
         // alpha, text uses premultiplied) — just toggle the feature on.
         unsafe { gl::Enable(gl::BLEND) };
 
+        // On HiDPI / fractional-scaling compositors the framebuffer is larger
+        // than the requested window size, so the implicit initial viewport
+        // covers only a corner of it. Set the viewport from the actual
+        // framebuffer size and keep it in sync on FramebufferSize events.
+        let (fb_w, fb_h) = pwindow.get_framebuffer_size();
+        unsafe { gl::Viewport(0, 0, fb_w, fb_h) };
+
         glfw.poll_events();
 
         self.glfw = Some(GlfwWrapper(Box::new(glfw)));
@@ -159,7 +166,7 @@ impl RenderContext {
         });
         self.window_size = Vec2::new(settings.width as f32, settings.height as f32);
         self.matrix =
-            self.ortho_top_left_matrix(settings.width as f32, settings.height as f32, -1., 1.);
+            Self::ortho_top_left_matrix(settings.width as f32, settings.height as f32, -1., 1.);
         self.renderer = Some(Renderer::new());
 
         Ok(())
@@ -216,6 +223,13 @@ impl RenderContext {
                         let _ = message_bus::send(WindowMessage::Reposition(x as u32, y as u32));
                     }
                     Size(width, height) => {
+                        self.window_size = Vec2::new(width as f32, height as f32);
+                        self.matrix = Self::ortho_top_left_matrix(
+                            width as f32,
+                            height as f32,
+                            -1.,
+                            1.,
+                        );
                         let _ =
                             message_bus::send(WindowMessage::Resize(width as u32, height as u32));
                     }
@@ -232,6 +246,7 @@ impl RenderContext {
                         let _ = message_bus::send(WindowMessage::Minimize(iconify));
                     }
                     FramebufferSize(width, height) => {
+                        unsafe { gl::Viewport(0, 0, width, height) };
                         let _ = message_bus::send(WindowMessage::FramebufferResize(
                             width as u32,
                             height as u32,
@@ -278,7 +293,7 @@ impl RenderContext {
     }
 
     // Matrix to be submitted to shader for converting pixels to NDC
-    pub fn ortho_top_left_matrix(&self, width: f32, height: f32, near: f32, far: f32) -> Mat4 {
+    pub fn ortho_top_left_matrix(width: f32, height: f32, near: f32, far: f32) -> Mat4 {
         let sx = 2. / width;
         let sy = -2. / height; // negative to flip Y axis
         let sz = 2. / (far - near);
