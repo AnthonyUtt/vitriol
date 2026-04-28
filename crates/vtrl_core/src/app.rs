@@ -8,6 +8,8 @@ use std::{
 
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
+#[cfg(debug_assertions)]
+use vtrl_opengl::plugin::DebugOverlayPlugin;
 use vtrl_opengl::{plugin::Renderer2DPlugin, prelude::*};
 use vtrl_plugins::prelude::*;
 
@@ -108,6 +110,8 @@ impl App {
     pub fn with_default_plugins(mut self) -> Self {
         self.plugins.insert(Renderer2DPlugin);
         self.plugins.insert(TimePlugin);
+        #[cfg(debug_assertions)]
+        self.plugins.insert(DebugOverlayPlugin::default());
         self
     }
 

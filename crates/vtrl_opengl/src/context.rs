@@ -3,14 +3,17 @@ extern crate glfw;
 
 use glfw::{Context, Glfw, GlfwReceiver, OpenGlProfileHint, PWindow, WindowHint};
 use lazy_static::lazy_static;
-use std::sync::{
-    Arc, Mutex,
-    atomic::{AtomicBool, Ordering},
+use std::{
+    collections::HashMap,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
 };
 
 use vtrl_common::prelude::*;
 
-use crate::renderers::*;
+use crate::renderer::*;
 use crate::types::*;
 
 lazy_static! {
@@ -44,6 +47,10 @@ pub fn register_texture(texture: &TextureData) -> Result<usize> {
     RENDER_CONTEXT.lock().unwrap().register_texture(texture)
 }
 
+pub fn register_font(glyphs: HashMap<char, Glyph>) -> Result<usize> {
+    RENDER_CONTEXT.lock().unwrap().register_font(glyphs)
+}
+
 pub fn compute_uv(texture_id: usize, uv: Vec4) -> Vec4 {
     RENDER_CONTEXT.lock().unwrap().compute_uv(texture_id, uv)
 }
@@ -52,6 +59,23 @@ pub fn draw_quad_instances(instances: &[QuadInstance]) {
     if let Ok(ctx) = RENDER_CONTEXT.lock() {
         ctx.draw_quad_instances(instances);
     }
+}
+
+pub fn draw_text_instances(instances: &[GlyphInstance]) {
+    if let Ok(ctx) = RENDER_CONTEXT.lock() {
+        ctx.draw_text_instances(instances);
+    }
+}
+
+pub fn get_glyph(font_id: u32, c: char) -> Option<Glyph> {
+    RENDER_CONTEXT.lock().ok()?.get_glyph(font_id, c)
+}
+
+pub fn window_size() -> Vec2 {
+    RENDER_CONTEXT
+        .lock()
+        .map(|ctx| ctx.window_size())
+        .unwrap_or(Vec2::zero())
 }
 
 struct GlfwWrapper(Box<Glfw>);
@@ -76,8 +100,9 @@ struct WindowContext {
 struct RenderContext {
     glfw: Option<GlfwWrapper>,
     window: Option<WindowContext>,
+    window_size: Vec2,
     matrix: Mat4,
-    quad_renderer: Option<QuadRenderer>,
+    renderer: Option<Renderer>,
 }
 
 impl RenderContext {
@@ -85,8 +110,9 @@ impl RenderContext {
         RenderContext {
             glfw: None,
             window: None,
+            window_size: Vec2::zero(),
             matrix: Mat4::identity(),
-            quad_renderer: None,
+            renderer: None,
         }
     }
 
@@ -120,6 +146,10 @@ impl RenderContext {
         Self::print_gl_facts()?;
         set_gl_debug_message_callback();
 
+        // BlendFunc is set per-pass in the renderer (quads use straight
+        // alpha, text uses premultiplied) — just toggle the feature on.
+        unsafe { gl::Enable(gl::BLEND) };
+
         glfw.poll_events();
 
         self.glfw = Some(GlfwWrapper(Box::new(glfw)));
@@ -127,9 +157,10 @@ impl RenderContext {
             window: pwindow,
             events,
         });
+        self.window_size = Vec2::new(settings.width as f32, settings.height as f32);
         self.matrix =
             self.ortho_top_left_matrix(settings.width as f32, settings.height as f32, -1., 1.);
-        self.quad_renderer = Some(QuadRenderer::new());
+        self.renderer = Some(Renderer::new());
 
         Ok(())
     }
@@ -266,26 +297,58 @@ impl RenderContext {
     }
 
     pub fn register_texture(&mut self, texture: &TextureData) -> Result<usize> {
-        if let Some(r) = &mut self.quad_renderer {
+        if let Some(r) = &mut self.renderer {
             r.register_texture(texture)
         } else {
             Err(VtrlError::Renderer(
-                "Quad renderer not initialized!".to_string(),
+                "Renderer not initialized!".to_string(),
+            ))
+        }
+    }
+
+    pub fn register_font(&mut self, glyphs: HashMap<char, Glyph>) -> Result<usize> {
+        if let Some(r) = &mut self.renderer {
+            r.register_font(glyphs)
+        } else {
+            Err(VtrlError::Renderer(
+                "Renderer not initialized!".to_string(),
             ))
         }
     }
 
     pub fn compute_uv(&self, texture_id: usize, uv: Vec4) -> Vec4 {
-        if let Some(r) = &self.quad_renderer {
+        if let Some(r) = &self.renderer {
             r.compute_uv(texture_id, uv)
         } else {
             Vec4::new(0., 0., 1., 1.)
         }
     }
 
+    pub fn get_glyph(&self, font_id: u32, c: char) -> Option<Glyph> {
+        self.renderer.as_ref()?.get_glyph(font_id, c).cloned()
+    }
+
+    pub fn window_size(&self) -> Vec2 {
+        self.window_size
+    }
+
+    pub fn start_frame(&self, clear_color: Vec4) {
+        clear(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+    }
+
+    pub fn end_frame(&self) {
+
+    }
+
     pub fn draw_quad_instances(&self, instances: &[QuadInstance]) {
-        if let Some(r) = &self.quad_renderer {
+        if let Some(r) = &self.renderer {
             r.draw_quad_instances(self.matrix, instances);
+        }
+    }
+
+    pub fn draw_text_instances(&self, instances: &[GlyphInstance]) {
+        if let Some(r) = &self.renderer {
+            r.draw_text_instances(self.matrix, instances);
         }
     }
 }

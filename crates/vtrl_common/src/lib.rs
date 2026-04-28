@@ -1,5 +1,6 @@
 mod asset;
 mod channel;
+pub mod debug;
 mod error;
 mod macros;
 mod message;
@@ -29,4 +30,5 @@ pub mod prelude {
 
     // Macros
     pub use crate::c_str;
+    pub use crate::debug_println;
 }

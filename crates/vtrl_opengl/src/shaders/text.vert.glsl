@@ -3,14 +3,17 @@
 layout (location = 0) in vec2 aPos;     // unit quad vertices
 layout (location = 1) in vec2 iPosPx;   // top-left position in pixels
 layout (location = 2) in vec2 iSizePx;  // glyph size in pixels
-layout (location = 3) in vec4 iUV;      // u0, v0, u1, v1
-layout (location = 4) in vec4 iColor;   // RGBA tint
-layout (location = 5) in float iZIndex; // depth
+layout (location = 3) in float iRot;
+layout (location = 4) in float iZIndex;
+layout (location = 5) in vec4 iColor;   // RGBA tint
+layout (location = 6) in vec4 iUV;      // u0, v0, u1, v1
+layout (location = 7) in float iTexIdx;
 
 uniform mat4 uOrtho; // top-left origin orthographic projection
 
 out vec2 v_uv;
 out vec4 v_color;
+out float v_texIdx;
 
 void main()
 {
@@ -29,6 +32,7 @@ void main()
     vec2 uv01 = aPos + vec2(0.5);
     v_uv = mix(iUV.xy, iUV.zw, uv01);
     
-    // Pass color to fragment shader
+    // Pass color/texture to fragment shader
     v_color = iColor;
+    v_texIdx = iTexIdx;
 }

@@ -14,8 +14,17 @@ pub enum VtrlError {
     #[error("Lock Error: {0}")]
     Lock(String),
 
+    #[error("Type Error: {0}")]
+    Type(String),
+
     #[error(transparent)]
     Image(#[from] image::ImageError),
+
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+
+    #[error(transparent)]
+    Freetype(#[from] freetype::Error),
 
     #[error(transparent)]
     Unknown(#[from] anyhow::Error),

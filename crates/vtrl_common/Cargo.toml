@@ -16,3 +16,4 @@ serde_derive.workspace = true
 lazy_static.workspace = true
 string-interner.workspace = true
 image.workspace = true
+freetype-rs.workspace = true

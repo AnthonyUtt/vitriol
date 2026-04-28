@@ -532,6 +532,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
 
 [[package]]
+name = "freetype-rs"
+version = "0.37.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1d1f81b925f09d7040682dbc91eb1b6ad43232f4bc6ee080f518001c05b5415"
+dependencies = [
+ "bitflags 2.11.1",
+ "freetype-sys",
+ "libc",
+]
+
+[[package]]
+name = "freetype-sys"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ddb84abd9992afaa8eb9b8bef907a94553504d0a890924e1bf1f1ab1249455af"
+dependencies = [
+ "cc",
+ "libc",
+ "pkg-config",
+]
+
+[[package]]
 name = "futures-core"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1561,6 +1583,7 @@ dependencies = [
  "anyhow",
  "bilge",
  "flume",
+ "freetype-rs",
  "image",
  "lazy_static",
  "log",
@@ -1605,9 +1628,13 @@ dependencies = [
 name = "vtrl_opengl"
 version = "0.1.0"
 dependencies = [
+ "freetype-rs",
  "gl",
  "glfw",
+ "image",
  "lazy_static",
+ "serde",
+ "serde_derive",
  "vtrl_common",
  "vtrl_ecs",
 ]

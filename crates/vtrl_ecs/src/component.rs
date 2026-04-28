@@ -6,6 +6,9 @@ use crate::entity::Entity;
 use crate::query::*;
 use crate::world::World;
 
+mod base;
+pub use base::*;
+
 mod pool;
 use pool::*;
 

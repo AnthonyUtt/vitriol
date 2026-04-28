@@ -16,6 +16,7 @@ serde_derive = "1"
 lazy_static = "1.5"
 image = "0.25"
 string-interner = "0.19"
+freetype-rs = { version = "0.37", features = ["bundled"] }
 
 [package]
 name = "vitriol"

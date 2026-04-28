@@ -1,6 +1,11 @@
 extern crate gl;
 
+use std::path::Path;
+use image::EncodableLayout;
+
 use vtrl_common::prelude::*;
+
+use crate::context::register_texture;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Texture {
@@ -8,7 +13,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn from_data(data: &TextureData) -> Self {
+    pub fn new(buffer: &[u8], width: u32, height: u32) -> Self {
         unsafe {
             let mut id: u32 = 0;
             gl::GenTextures(1, &mut id);
@@ -30,12 +35,12 @@ impl Texture {
                 gl::TEXTURE_2D,
                 0,
                 gl::RGBA as i32,
-                data.width as i32,
-                data.height as i32,
+                width as i32,
+                height as i32,
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                data.bytes.as_ptr().cast(),
+                buffer.as_ptr().cast(),
             );
             gl::GenerateMipmap(gl::TEXTURE_2D);
 
@@ -59,5 +64,21 @@ impl Texture {
 
     pub fn destroy(&self) {
         unsafe { gl::DeleteTextures(1, &self.id as *const u32) }
+    }
+}
+
+impl Asset for Texture {
+    fn load(path: &Path) -> Result<Texture> {
+        let img = image::open(path)?.into_rgba8();
+
+        let tex_data = TextureData {
+            bytes: img.as_bytes().to_vec(),
+            width: img.width(),
+            height: img.height(),
+        };
+
+        let id = register_texture(&tex_data)?;
+
+        Ok(Texture { id: id as u32 })
     }
 }

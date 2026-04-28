@@ -1,3 +1,5 @@
+use serde_derive::*;
+
 use vtrl_common::prelude::*;
 
 #[derive(Debug, Copy, Clone)]
@@ -94,14 +96,14 @@ impl BufferLayout {
     }
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct QuadInstance {
-    pub pos: Vec2,
-    pub size: Vec2,
-    pub rot: f32,
-    pub z: f32,
-    pub color: Vec4,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Glyph {
+    pub advance_x: i64,
+    pub advance_y: i64,
+    pub width: u32,
+    pub height: u32,
+    pub top: u32,
+    pub left: u32,
     pub uv: Vec4,
-    pub tex: f32,
+    pub buffer: Vec<u8>,
 }

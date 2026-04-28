@@ -13,7 +13,7 @@ fn main() -> Result<()> {
             let mut rng = rand::rng();
             let width = 1280u32;
             let height = 720u32;
-            let quad_size = 5.;
+            let quad_size = 20.;
             let row_count = width / quad_size as u32;
             let col_count = height / quad_size as u32;
             let quad_count = row_count * col_count;
@@ -29,7 +29,7 @@ fn main() -> Result<()> {
                         rng.random::<f32>(),
                         rng.random::<f32>(),
                         rng.random::<f32>(),
-                        rng.random::<f32>(),
+                        1.,
                     ),
                     uv: Vec4::zero(),
                     texture_id: 0,
@@ -37,11 +37,9 @@ fn main() -> Result<()> {
             }
 
             let texture_path = Path::new("./src/assets/mandark_256x256.png");
-            let (_, data) = asset_mgr
-                .load::<TextureData>(texture_path)
+            let (_, tex) = asset_mgr
+                .load::<Texture>(texture_path)
                 .expect("Unable to load texture!");
-            let texture_id =
-                render_context::register_texture(data).expect("unable to register texture");
 
             world
                 .spawn()
@@ -52,7 +50,7 @@ fn main() -> Result<()> {
                     z_index: 0.1,
                     color: Vec4::one(),
                     uv: Vec4::new(0., 0., 1., 1.),
-                    texture_id: texture_id as u32,
+                    texture_id: tex.id,
                 })
                 .with_component(Ignore);
         })
@@ -64,13 +62,13 @@ fn main() -> Result<()> {
                     rng.random::<f32>(),
                     rng.random::<f32>(),
                     rng.random::<f32>(),
-                    rng.random::<f32>(),
+                    1.,
                 );
             }
         })
-        .with_system(ScheduleSlot::Last, |w, _| {
+        .with_system(ScheduleSlot::Update, |w, _| {
             let fps = w.get_resource::<FrameRate>().unwrap().0;
-            log::info!("FPS: {fps}");
+            debug_println!("FPS: {fps:.1}");
         })
         .run()
 }

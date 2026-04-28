@@ -1,3 +1,8 @@
+extern crate freetype as ft;
+extern crate gl;
+
+use std::collections::HashMap;
+
 use vtrl_common::prelude::*;
 
 use crate::primitives::*;
@@ -6,6 +11,9 @@ use crate::types::*;
 
 const MAX_QUADS: usize = 1_000_000;
 const MAX_TEXTURES: usize = 32;
+const MAX_FONTS: usize = 16;
+
+const DEFAULT_FONT_BYTES: &[u8] = include_bytes!("./assets/monogram-extended.ttf");
 
 const UNIT_QUAD: [Vec4; 6] = [
     Vec4::new(-0.5, 0.5, 0., 1.),  // top left
@@ -18,33 +26,39 @@ const UNIT_QUAD: [Vec4; 6] = [
 
 const DEFAULT_TEX_BYTES: [u8; 4] = [255; 4];
 
-pub struct QuadRenderer {
-    shader: ShaderProgram,
+pub struct Renderer {
+    quad_shader: ShaderProgram,
+    text_shader: ShaderProgram,
     vao: VertexArray,
-    quad_vbo: VertexBuffer,
+    _quad_vbo: VertexBuffer,
     instance_vbo: VertexBuffer,
-    default_texture_id: usize,
+    _default_texture_id: usize,
     texture_array: TextureArray,
+    font_atlas: FontAtlas,
 }
 
-impl QuadRenderer {
+impl Renderer {
     pub fn new() -> Self {
-        let shader = ShaderProgram::new()
+        let quad_shader = ShaderProgram::new()
             .with_vert_shader(QUAD_VERTEX_SHADER_SOURCE)
             .with_frag_shader(QUAD_FRAGMENT_SHADER_SOURCE)
+            .build();
+        let text_shader = ShaderProgram::new()
+            .with_vert_shader(TEXT_VERTEX_SHADER_SOURCE)
+            .with_frag_shader(TEXT_FRAGMENT_SHADER_SOURCE)
             .build();
 
         let mut vao = VertexArray::new();
 
-        let mut quad_vbo = VertexBuffer::new_from_arr::<Vec4>(&UNIT_QUAD);
-        quad_vbo.layout = BufferLayout::new(vec![BufferElement::new(
+        let mut _quad_vbo = VertexBuffer::new_from_arr::<Vec4>(&UNIT_QUAD);
+        _quad_vbo.layout = BufferLayout::new(vec![BufferElement::new(
             0,
             "aPos",
             UniformType::Vec4,
             false,
             0,
         )]);
-        vao.add_vertex_buffer(quad_vbo.clone());
+        vao.add_vertex_buffer(_quad_vbo.clone());
 
         let mut instance_vbo = VertexBuffer::dynamic_new::<QuadInstance>(MAX_QUADS);
         instance_vbo.layout = BufferLayout::new(vec![
@@ -64,22 +78,45 @@ impl QuadRenderer {
             width: 1,
             height: 1,
         };
-        let default_texture_id = texture_array
+        let _default_texture_id = texture_array
             .add_texture(&default_texture)
             .expect("Unable to create default texture!");
 
+        let mut font_atlas = FontAtlas::new(1024, 1024, MAX_FONTS as u32);
+
+        let library = ft::Library::init().expect("Unable to initialize FreeType!");
+        let face = library
+            .new_memory_face(DEFAULT_FONT_BYTES.to_vec(), 0)
+            .expect("Unable to load default font!");
+        face.set_pixel_sizes(0, DEFAULT_PIXEL_HEIGHT)
+            .expect("Unable to size default font!");
+        let glyphs = build_glyph_map(&face).expect("Unable to build default glyphs!");
+        font_atlas
+            .add_font(glyphs)
+            .expect("Unable to register default font!");
+
         Self {
-            shader,
+            quad_shader,
+            text_shader,
             vao,
-            quad_vbo,
+            _quad_vbo,
             instance_vbo,
-            default_texture_id,
+            _default_texture_id,
             texture_array,
+            font_atlas,
         }
     }
 
     pub fn register_texture(&mut self, texture: &TextureData) -> Result<usize> {
         self.texture_array.add_texture(texture)
+    }
+
+    pub fn register_font(&mut self, glyphs: HashMap<char, Glyph>) -> Result<usize> {
+        self.font_atlas.add_font(glyphs)
+    }
+
+    pub fn get_glyph(&self, font_id: u32, c: char) -> Option<&Glyph> {
+        self.font_atlas.get_glyph(font_id as usize, c)
     }
 
     pub fn compute_uv(&self, texture_id: usize, uv: Vec4) -> Vec4 {
@@ -98,8 +135,11 @@ impl QuadRenderer {
             return;
         }
 
-        self.shader.activate();
-        self.shader.set_uniform_mat4("uOrtho", &matrix);
+        // Quad frag shader emits straight (non-premultiplied) alpha.
+        unsafe { gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA) };
+
+        self.quad_shader.activate();
+        self.quad_shader.set_uniform_mat4("uOrtho", &matrix);
         self.texture_array.bind(0);
 
         self.vao.bind();
@@ -113,6 +153,32 @@ impl QuadRenderer {
 
         self.instance_vbo.unbind();
         self.vao.unbind();
-        self.shader.deactivate();
+        self.quad_shader.deactivate();
+    }
+
+    pub fn draw_text_instances(&self, matrix: Mat4, instances: &[GlyphInstance]) {
+        if instances.is_empty() {
+            return;
+        }
+
+        // Text frag shader emits premultiplied alpha.
+        unsafe { gl::BlendFunc(gl::ONE, gl::ONE_MINUS_SRC_ALPHA) };
+
+        self.text_shader.activate();
+        self.text_shader.set_uniform_mat4("uOrtho", &matrix);
+        self.font_atlas.bind(0);
+
+        self.vao.bind();
+        self.instance_vbo.bind();
+        self.instance_vbo
+            .set_data::<GlyphInstance>(instances, instances.len(), 0);
+
+        unsafe {
+            gl::DrawArraysInstanced(gl::TRIANGLES, 0, 6, instances.len() as i32);
+        }
+
+        self.instance_vbo.unbind();
+        self.vao.unbind();
+        self.text_shader.deactivate();
     }
 }

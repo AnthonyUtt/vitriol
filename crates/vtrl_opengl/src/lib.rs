@@ -1,7 +1,7 @@
 pub mod context;
 pub mod plugin;
 pub(crate) mod primitives;
-pub(crate) mod renderers;
+pub(crate) mod renderer;
 pub(crate) mod shaders;
 pub(crate) mod types;
 

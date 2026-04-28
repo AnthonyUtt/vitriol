@@ -1,3 +1,5 @@
+mod font;
+mod font_atlas;
 mod index_buffer;
 mod shader_program;
 mod texture;
@@ -6,6 +8,8 @@ mod uniform_buffer;
 mod vertex_array;
 mod vertex_buffer;
 
+pub use font::*;
+pub use font_atlas::*;
 pub use index_buffer::*;
 pub use shader_program::*;
 pub use texture::*;

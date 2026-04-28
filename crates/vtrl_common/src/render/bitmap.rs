@@ -15,6 +15,7 @@ pub struct Bitmap<T: Default + Copy, const N: usize> {
     /// The height of the bitmap
     pub height: u32,
 }
+
 impl<T: Default + Copy, const N: usize> Bitmap<T, N> {
     /// Creates a new Bitmap<T, N> of the given width and height.
     pub fn new(width: u32, height: u32) -> Bitmap<T, N> {
@@ -28,11 +29,11 @@ impl<T: Default + Copy, const N: usize> Bitmap<T, N> {
     }
 
     /// Creates a new Bitmap<T, N> from the underlying raw buffer
-    pub fn new_from_data(buffer: Vec<T>, width: u32, height: u32) -> Bitmap<T, N> {
+    pub fn from_slice(buffer: &[T], width: u32, height: u32) -> Bitmap<T, N> {
         debug_assert_eq!(buffer.len(), width as usize * height as usize * N);
 
         Bitmap {
-            buffer,
+            buffer: buffer.to_vec(),
             width,
             height,
         }

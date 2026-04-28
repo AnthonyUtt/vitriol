@@ -9,3 +9,7 @@ vtrl_ecs = { path = "../vtrl_ecs" }
 gl = "*"
 glfw = "*"
 lazy_static.workspace = true
+image.workspace = true
+serde.workspace = true
+serde_derive.workspace = true
+freetype-rs.workspace = true
