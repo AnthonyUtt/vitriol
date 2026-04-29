@@ -66,6 +66,7 @@ impl Texture {
     }
 }
 
+#[asset]
 impl Asset for Texture {
     fn load(bytes: Vec<u8>) -> Result<Texture> {
         let img = image::load_from_memory(&bytes)?.into_rgba8();

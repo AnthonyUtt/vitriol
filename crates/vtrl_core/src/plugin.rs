@@ -1,6 +1,7 @@
 use std::any::TypeId;
 use std::collections::HashMap;
 
+use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
 
 pub struct PluginStorage {
@@ -19,9 +20,9 @@ impl PluginStorage {
         self.storage.insert(type_id, Box::new(plugin));
     }
 
-    pub fn bootstrap(&mut self, world: &mut World) {
+    pub fn bootstrap(&mut self, world: &mut World, asset_manager: &mut AssetManager) {
         for plugin in self.storage.values_mut() {
-            plugin.build(world);
+            plugin.build(world, asset_manager);
         }
     }
 }

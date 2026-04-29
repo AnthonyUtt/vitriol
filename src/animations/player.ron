@@ -1,0 +1,99 @@
+AnimationSet([
+    ("WALK_DOWN", [
+        (uv: (x: 0.0,  y: 0.0, z: 0.25, w: 0.2), duration: 0.2),
+        (uv: (x: 0.25, y: 0.0, z: 0.5,  w: 0.2), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.0, z: 0.75, w: 0.2), duration: 0.2),
+        (uv: (x: 0.75, y: 0.0, z: 1.0,  w: 0.2), duration: 0.2),
+    ]),
+    ("WALK_DOWN_RIGHT", [
+        (uv: (x: 0.0,  y: 0.2, z: 0.25, w: 0.4), duration: 0.2),
+        (uv: (x: 0.25, y: 0.2, z: 0.5,  w: 0.4), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.2, z: 0.75, w: 0.4), duration: 0.2),
+        (uv: (x: 0.75, y: 0.2, z: 1.0,  w: 0.4), duration: 0.2),
+    ]),
+    ("WALK_RIGHT", [
+        (uv: (x: 0.0,  y: 0.4, z: 0.25, w: 0.6), duration: 0.2),
+        (uv: (x: 0.25, y: 0.4, z: 0.5,  w: 0.6), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.4, z: 0.75, w: 0.6), duration: 0.2),
+        (uv: (x: 0.75, y: 0.4, z: 1.0,  w: 0.6), duration: 0.2),
+    ]),
+    ("WALK_UP_RIGHT", [
+        (uv: (x: 0.0,  y: 0.6, z: 0.25, w: 0.8), duration: 0.2),
+        (uv: (x: 0.25, y: 0.6, z: 0.5,  w: 0.8), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.6, z: 0.75, w: 0.8), duration: 0.2),
+        (uv: (x: 0.75, y: 0.6, z: 1.0,  w: 0.8), duration: 0.2),
+    ]),
+    ("WALK_UP", [
+        (uv: (x: 0.0,  y: 0.8, z: 0.25, w: 1.0), duration: 0.2),
+        (uv: (x: 0.25, y: 0.8, z: 0.5,  w: 1.0), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.8, z: 0.75, w: 1.0), duration: 0.2),
+        (uv: (x: 0.75, y: 0.8, z: 1.0,  w: 1.0), duration: 0.2),
+    ]),
+    ("WALK_UP_LEFT", [
+        (uv: (x: 0.25, y: 0.6, z: 0.0,  w: 0.8), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.6, z: 0.25, w: 0.8), duration: 0.2),
+        (uv: (x: 0.75, y: 0.6, z: 0.5,  w: 0.8), duration: 0.2),
+        (uv: (x: 1.0,  y: 0.6, z: 0.75, w: 0.8), duration: 0.2),
+    ]),
+    ("WALK_LEFT", [
+        (uv: (x: 0.25, y: 0.4, z: 0.0,  w: 0.6), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.4, z: 0.25, w: 0.6), duration: 0.2),
+        (uv: (x: 0.75, y: 0.4, z: 0.5,  w: 0.6), duration: 0.2),
+        (uv: (x: 1.0,  y: 0.4, z: 0.75, w: 0.6), duration: 0.2),
+    ]),
+    ("WALK_DOWN_LEFT", [
+        (uv: (x: 0.25, y: 0.2, z: 0.0,  w: 0.4), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.2, z: 0.25, w: 0.4), duration: 0.2),
+        (uv: (x: 0.75, y: 0.2, z: 0.5,  w: 0.4), duration: 0.2),
+        (uv: (x: 1.0,  y: 0.2, z: 0.75, w: 0.4), duration: 0.2),
+    ]),
+
+    ("IDLE_DOWN", [
+        (uv: (x: 0.0,  y: 0.0, z: 0.25, w: 0.2), duration: 0.2),
+        (uv: (x: 0.25, y: 0.0, z: 0.5,  w: 0.2), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.0, z: 0.75, w: 0.2), duration: 0.2),
+        (uv: (x: 0.75, y: 0.0, z: 1.0,  w: 0.2), duration: 0.2),
+    ]),
+    ("IDLE_DOWN_RIGHT", [
+        (uv: (x: 0.0,  y: 0.2, z: 0.25, w: 0.4), duration: 0.2),
+        (uv: (x: 0.25, y: 0.2, z: 0.5,  w: 0.4), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.2, z: 0.75, w: 0.4), duration: 0.2),
+        (uv: (x: 0.75, y: 0.2, z: 1.0,  w: 0.4), duration: 0.2),
+    ]),
+    ("IDLE_RIGHT", [
+        (uv: (x: 0.0,  y: 0.4, z: 0.25, w: 0.6), duration: 0.2),
+        (uv: (x: 0.25, y: 0.4, z: 0.5,  w: 0.6), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.4, z: 0.75, w: 0.6), duration: 0.2),
+        (uv: (x: 0.75, y: 0.4, z: 1.0,  w: 0.6), duration: 0.2),
+    ]),
+    ("IDLE_UP_RIGHT", [
+        (uv: (x: 0.0,  y: 0.6, z: 0.25, w: 0.8), duration: 0.2),
+        (uv: (x: 0.25, y: 0.6, z: 0.5,  w: 0.8), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.6, z: 0.75, w: 0.8), duration: 0.2),
+        (uv: (x: 0.75, y: 0.6, z: 1.0,  w: 0.8), duration: 0.2),
+    ]),
+    ("IDLE_UP", [
+        (uv: (x: 0.0,  y: 0.8, z: 0.25, w: 1.0), duration: 0.2),
+        (uv: (x: 0.25, y: 0.8, z: 0.5,  w: 1.0), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.8, z: 0.75, w: 1.0), duration: 0.2),
+        (uv: (x: 0.75, y: 0.8, z: 1.0,  w: 1.0), duration: 0.2),
+    ]),
+    ("IDLE_UP_LEFT", [
+        (uv: (x: 0.25, y: 0.6, z: 0.0,  w: 0.8), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.6, z: 0.25, w: 0.8), duration: 0.2),
+        (uv: (x: 0.75, y: 0.6, z: 0.5,  w: 0.8), duration: 0.2),
+        (uv: (x: 1.0,  y: 0.6, z: 0.75, w: 0.8), duration: 0.2),
+    ]),
+    ("IDLE_LEFT", [
+        (uv: (x: 0.25, y: 0.4, z: 0.0,  w: 0.6), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.4, z: 0.25, w: 0.6), duration: 0.2),
+        (uv: (x: 0.75, y: 0.4, z: 0.5,  w: 0.6), duration: 0.2),
+        (uv: (x: 1.0,  y: 0.4, z: 0.75, w: 0.6), duration: 0.2),
+    ]),
+    ("IDLE_DOWN_LEFT", [
+        (uv: (x: 0.25, y: 0.2, z: 0.0,  w: 0.4), duration: 0.2),
+        (uv: (x: 0.5,  y: 0.2, z: 0.25, w: 0.4), duration: 0.2),
+        (uv: (x: 0.75, y: 0.2, z: 0.5,  w: 0.4), duration: 0.2),
+        (uv: (x: 1.0,  y: 0.2, z: 0.75, w: 0.4), duration: 0.2),
+    ]),
+])

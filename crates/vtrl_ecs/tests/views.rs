@@ -99,8 +99,8 @@ fn view_with_mutable_component() {
     assert_eq!(pos.1, 10.0);
 }
 
-#[derive(Component)]
+#[component]
 struct Position(pub f32, pub f32);
 
-#[derive(Component)]
+#[component]
 struct Size(pub f32, pub f32);

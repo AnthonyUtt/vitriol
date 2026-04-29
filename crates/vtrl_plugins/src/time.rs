@@ -1,11 +1,12 @@
 use std::time::Instant;
 
+use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
 
 pub struct TimePlugin;
 
 impl Plugin for TimePlugin {
-    fn build(&self, world: &mut World) {
+    fn build(&self, world: &mut World, _mgr: &mut AssetManager) {
         world.add_resource(DeltaTime(0.0));
         world.add_resource(LastFrameTime(Instant::now()));
         world.add_resource(FrameRate(0.0));

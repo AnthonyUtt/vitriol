@@ -9,8 +9,44 @@ use crate::primitives::*;
 pub struct Renderer2DPlugin;
 
 impl Plugin for Renderer2DPlugin {
-    fn build(&self, world: &mut World) {
+    fn build(&self, world: &mut World, _mgr: &mut AssetManager) {
         world.add_resource(AnimationStore::default());
+
+        world.add_system(ScheduleSlot::PreRender, |w, mgr| {
+            // Drain newly-loaded AnimationSet assets into AnimationStore.
+            // Runs in PreRender so the SceneManager system (in First) has
+            // populated `just_loaded` by the time we read it. We take the
+            // list out of SceneManager so its RefMut releases before we
+            // re-borrow the world for AnimationStore.
+            let mut loaded = match w.get_resource_mut::<SceneManager>() {
+                Some(mut s) if !s.just_loaded.is_empty() => std::mem::take(&mut s.just_loaded),
+                _ => return,
+            };
+
+            {
+                let mut store = w.get_resource_mut::<AnimationStore>().unwrap();
+                loaded.retain(|(ty, sym)| {
+                    if ty == "AnimationSet" {
+                        if let Some(set) = mgr.get::<AnimationSet>(*sym) {
+                            for (name, frames) in &set.0 {
+                                store.insert(name.clone(), frames.clone());
+                            }
+                        }
+                        false
+                    } else {
+                        true
+                    }
+                });
+            }
+
+            // Put back anything we didn't drain so other consumers can.
+            if !loaded.is_empty() {
+                w.get_resource_mut::<SceneManager>()
+                    .unwrap()
+                    .just_loaded
+                    .append(&mut loaded);
+            }
+        });
 
         world.add_system(ScheduleSlot::Render, |w, mgr| {
             let animations = w.get_resource::<AnimationStore>().unwrap();
@@ -135,7 +171,7 @@ impl Default for DebugOverlayPlugin {
 }
 
 impl Plugin for DebugOverlayPlugin {
-    fn build(&self, world: &mut World) {
+    fn build(&self, world: &mut World, _mgr: &mut AssetManager) {
         let anchor = self.anchor;
         let style = self.style;
         let padding = self.padding;

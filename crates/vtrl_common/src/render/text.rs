@@ -1,4 +1,6 @@
-#[derive(Debug, Copy, Clone)]
+use serde_derive::*;
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct TextStyle {
     pub font_id: u32,
     pub size: f32,
@@ -19,19 +21,19 @@ impl Default for TextStyle {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum TextSlant {
     Normal,
     Italic,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum TextWeight {
     Regular,
     Bold,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum Anchor {
     TopLeft,
     TopRight,

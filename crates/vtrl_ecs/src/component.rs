@@ -12,6 +12,9 @@ pub use base::*;
 mod pool;
 use pool::*;
 
+mod registry;
+pub use registry::*;
+
 pub trait Component: Any + Send + Sync + 'static {
     fn name() -> &'static str
     where
@@ -186,6 +189,6 @@ mod test {
         assert!(pos.is_none());
     }
 
-    #[derive(vtrl_ecs_macros::Component)]
+    #[crate::prelude::component]
     struct Position(pub f32, pub f32);
 }

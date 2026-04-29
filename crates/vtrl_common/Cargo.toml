@@ -4,7 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+vtrl_macros = { path = "../vtrl_macros" }
 thiserror.workspace = true
+erased-serde.workspace = true
 anyhow.workspace = true
 log.workspace = true
 once_cell.workspace = true
@@ -17,3 +19,5 @@ lazy_static.workspace = true
 string-interner.workspace = true
 image.workspace = true
 freetype-rs.workspace = true
+ron.workspace = true
+inventory.workspace = true

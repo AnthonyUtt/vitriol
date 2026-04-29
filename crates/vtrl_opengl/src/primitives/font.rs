@@ -12,6 +12,7 @@ pub struct Font {
     pub id: u32,
 }
 
+#[asset]
 impl Asset for Font {
     fn load(bytes: Vec<u8>) -> Result<Font> {
         let library = ft::Library::init()?;

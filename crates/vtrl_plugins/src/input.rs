@@ -134,7 +134,7 @@ impl Default for InputState {
 
 pub struct InputPlugin;
 impl Plugin for InputPlugin {
-    fn build(&self, _world: &mut World) {
+    fn build(&self, _world: &mut World, _mgr: &mut AssetManager) {
         message_bus::register_handler(Box::new(InputHandler), Some(TypeId::of::<WindowMessage>()))
             .expect("Unable to register input message handler!");
     }

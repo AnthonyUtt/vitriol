@@ -17,6 +17,9 @@ pub enum VtrlError {
     #[error("Type Error: {0}")]
     Type(String),
 
+    #[error("Asset Error: {0}")]
+    Asset(String),
+
     #[error(transparent)]
     Image(#[from] image::ImageError),
 
@@ -25,6 +28,15 @@ pub enum VtrlError {
 
     #[error(transparent)]
     Freetype(#[from] freetype::Error),
+
+    #[error(transparent)]
+    Ron(#[from] ron::de::SpannedError),
+
+    #[error(transparent)]
+    RonSer(#[from] ron::Error),
+
+    #[error(transparent)]
+    Serde(#[from] erased_serde::Error),
 
     #[error(transparent)]
     Unknown(#[from] anyhow::Error),

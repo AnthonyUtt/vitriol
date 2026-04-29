@@ -5,4 +5,8 @@ edition = "2024"
 
 [dependencies]
 vtrl_common = { path = "../vtrl_common" }
-vtrl_ecs_macros = { path = "./macros" }
+vtrl_macros = { path = "../vtrl_macros" }
+ron.workspace = true
+inventory.workspace = true
+serde.workspace = true
+erased-serde.workspace = true

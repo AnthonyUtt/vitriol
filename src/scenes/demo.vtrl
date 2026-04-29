@@ -1,0 +1,42 @@
+Scene(
+    assets: [
+        AssetDef(asset_type: "Texture", path: "assets/walk.png"),
+        AssetDef(asset_type: "Texture", path: "assets/idle.png"),
+        AssetDef(asset_type: "AnimationSet", path: "animations/player.ron"),
+    ],
+    entities: [
+        EntityDef(
+            name: Some("Player"),
+            components: {
+                "PlayerTag": (),
+                "TransformComponent": (
+                    position: (x: 540.0, y: 260.0),
+                    rotation: 0.0,
+                    scale: (x: 1.0, y: 1.0),
+                    z_index: 0.1,
+                ),
+                "VelocityComponent": (
+                    direction: (x: 0.0, y: 0.0),
+                    speed: 60.0,
+                ),
+                "Direction": Down,
+                "SpriteComponent": (
+                    size: (x: 50.0, y: 50.0),
+                    texture_handle: "assets/walk.png",
+                    uv: (x: 0.0, y: 0.0, z: 0.25, w: 0.2),
+                    color: (x: 1.0, y: 1.0, z: 1.0, w: 1.0),
+                ),
+                "AnimationComponent": (
+                    texture_handle: "assets/walk.png",
+                    current_frame: 0,
+                    active_animation: "WALK_DOWN_RIGHT",
+                    elapsed: 0.0,
+                ),
+                "PlayerSpritesheets": (
+                    walk: "assets/walk.png",
+                    idle: "assets/idle.png",
+                ),
+            },
+        ),
+    ],
+)

@@ -16,6 +16,10 @@ pub struct EntityBuilder<'a> {
 }
 
 impl<'a> EntityBuilder<'a> {
+    pub fn add_component<T: Component>(&mut self, component: T) {
+        self.world.add_component(self.entity, component);
+    }
+
     pub fn with_component<T: Component>(self, component: T) -> Self {
         self.world.add_component(self.entity, component);
         self

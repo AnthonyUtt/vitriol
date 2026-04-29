@@ -113,6 +113,7 @@ impl App {
     }
 
     pub fn with_default_plugins(mut self) -> Self {
+        self.plugins.insert(SceneManagerPlugin);
         self.plugins.insert(Renderer2DPlugin);
         self.plugins.insert(TimePlugin);
         self.plugins.insert(InputPlugin);
@@ -136,7 +137,7 @@ impl App {
     fn bootstrap(&mut self) {
         render_context::init(WindowSettings::default())
             .expect("Unable to initialize render context!");
-        self.plugins.bootstrap(&mut self.world);
+        self.plugins.bootstrap(&mut self.world, &mut self.assets);
 
         self.world.add_system(ScheduleSlot::Last, |_, _| {
             render_context::process_events();

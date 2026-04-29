@@ -1,17 +1,15 @@
-use std::sync::Arc;
-
 use vtrl_common::prelude::*;
 
 use crate::prelude::*;
 
-#[derive(Component)]
+#[component]
 pub struct TextComponent {
-    pub text: Arc<str>,
+    pub text: String,
     pub style: TextStyle,
     pub color: Vec4,
 }
 
-#[derive(Component)]
+#[component]
 pub struct TransformComponent {
     pub position: Vec2,
     pub rotation: f32,
@@ -30,30 +28,30 @@ impl Default for TransformComponent {
     }
 }
 
-#[derive(Component)]
+#[component]
 pub struct VelocityComponent {
     pub direction: Vec2,
     pub speed: f32,
 }
 
-#[derive(Component)]
+#[component]
 pub struct QuadComponent {
     pub size: Vec2,
     pub color: Vec4,
 }
 
-#[derive(Component)]
+#[component]
 pub struct SpriteComponent {
     pub size: Vec2,
-    pub texture_handle: Symbol,
+    pub texture_handle: AssetHandle,
     pub uv: Vec4,
     pub color: Vec4,
 }
 
-#[derive(Component)]
+#[component]
 pub struct AnimationComponent {
-    pub texture_handle: Symbol,
+    pub texture_handle: AssetHandle,
     pub current_frame: usize,
-    pub active_animation: Arc<str>,
+    pub active_animation: String,
     pub elapsed: f32,
 }

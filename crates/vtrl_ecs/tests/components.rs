@@ -28,5 +28,5 @@ fn mutate_component_on_entity() {
     assert_eq!(pos.1, 2.0);
 }
 
-#[derive(Component)]
+#[component]
 struct Position(pub f32, pub f32);

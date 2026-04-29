@@ -17,6 +17,9 @@ pub mod prelude {
         UVec2, UVec3, UVec4,
         Mat2, Mat3, Mat4,
     };
+    pub use serde;
+    pub use inventory;
+    pub use vtrl_macros::asset;
 
     // Utilities
     pub use crate::asset::*;
