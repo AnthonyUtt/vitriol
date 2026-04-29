@@ -24,11 +24,7 @@ lazy_static! {
 }
 
 pub fn init(settings: WindowSettings) -> Result<()> {
-    if let Ok(mut ctx) = RENDER_CONTEXT.lock() {
-        ctx.init(settings)?;
-    }
-
-    Ok(())
+    RENDER_CONTEXT.lock().unwrap().init(settings)
 }
 
 pub fn push_command(cmd: RenderCommand) {
@@ -36,15 +32,12 @@ pub fn push_command(cmd: RenderCommand) {
 }
 
 pub fn process_events() {
-    if let Ok(mut ctx) = RENDER_CONTEXT.lock() {
-        ctx.process_events();
-    }
+        RENDER_CONTEXT.lock().unwrap().process_events();
 }
 
 pub fn process_queue() {
-    if let Ok(mut ctx) = RENDER_CONTEXT.lock() {
-        RENDER_QUEUE.process(&mut ctx);
-    }
+    let mut ctx = RENDER_CONTEXT.lock().unwrap();
+    RENDER_QUEUE.process(&mut ctx);
 }
 
 pub fn register_texture(texture: &TextureData) -> Result<usize> {
@@ -303,32 +296,19 @@ impl RenderContext {
         }
     }
 
+    // Render methods - unwrap is intentional here, if the renderer hasn't
+    // been initialized by the time we are calling these methods then we have
+    // a serious bug and need to know about it
     pub fn register_texture(&mut self, texture: &TextureData) -> Result<usize> {
-        if let Some(r) = &mut self.renderer {
-            r.register_texture(texture)
-        } else {
-            Err(VtrlError::Renderer(
-                "Renderer not initialized!".to_string(),
-            ))
-        }
+        self.renderer.as_mut().unwrap().register_texture(texture)
     }
 
     pub fn register_font(&mut self, glyphs: HashMap<char, Glyph>) -> Result<usize> {
-        if let Some(r) = &mut self.renderer {
-            r.register_font(glyphs)
-        } else {
-            Err(VtrlError::Renderer(
-                "Renderer not initialized!".to_string(),
-            ))
-        }
+        self.renderer.as_mut().unwrap().register_font(glyphs)
     }
 
     pub fn compute_uv(&self, texture_id: usize, uv: Vec4) -> Vec4 {
-        if let Some(r) = &self.renderer {
-            r.compute_uv(texture_id, uv)
-        } else {
-            Vec4::new(0., 0., 1., 1.)
-        }
+        self.renderer.as_ref().unwrap().compute_uv(texture_id, uv)
     }
 
     pub fn get_glyph(&self, font_id: u32, c: char) -> Option<Glyph> {
@@ -432,15 +412,17 @@ impl RenderContext {
     pub fn end_pass(&self) {}
 
     pub fn draw_quad_instances(&self, instances: &[QuadInstance]) {
-        if let Some(r) = &self.renderer {
-            r.draw_quad_instances(self.matrix, instances);
-        }
+        self.renderer
+            .as_ref()
+            .unwrap()
+            .draw_quad_instances(self.matrix, instances);
     }
 
     pub fn draw_text_instances(&self, instances: &[GlyphInstance]) {
-        if let Some(r) = &self.renderer {
-            r.draw_text_instances(self.matrix, instances);
-        }
+        self.renderer
+            .as_ref()
+            .unwrap()
+            .draw_text_instances(self.matrix, instances);
     }
 }
 

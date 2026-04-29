@@ -14,7 +14,9 @@ impl Plugin for Renderer2DPlugin {
 
         world.add_system(ScheduleSlot::Render, |w, mgr| {
             let animations = w.get_resource::<AnimationStore>().unwrap();
-            let dt = w.get_resource::<DeltaTime>().unwrap().0;
+            let dt = w.get_resource::<DeltaTime>()
+                .map(|t| t.0)
+                .unwrap_or(0.);
 
             context::push_command(RenderCommand::BeginPass {
                 name: "world",
@@ -48,7 +50,8 @@ impl Plugin for Renderer2DPlugin {
                     let tex_id: u32 = mgr.get::<Texture>(anim.texture_handle)
                         .map(|t| t.id)
                         .unwrap_or(0);
-                    let frames = animations.get(anim.active_animation.to_string()).unwrap();
+                    let frames = animations.get(anim.active_animation.to_string())
+                        .unwrap_or_else(|| panic!("Animation not found! {}", anim.active_animation));
                     let frame = frames[anim.current_frame];
 
                     // update animation timing & frame if necessary
