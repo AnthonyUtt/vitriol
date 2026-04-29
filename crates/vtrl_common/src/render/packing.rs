@@ -22,9 +22,7 @@ impl ShelfPacker {
             }
         }
 
-        let y = self.shelves.last()
-            .map(|s| s.y + s.height)
-            .unwrap_or(0);
+        let y = self.shelves.last().map(|s| s.y + s.height).unwrap_or(0);
 
         if y + glyph_h > self.height {
             return None;

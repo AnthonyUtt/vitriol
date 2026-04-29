@@ -85,8 +85,12 @@ impl FontAtlas {
         let inv_h = 1.0 / self.height as f32;
 
         for glyph in glyphs.values_mut() {
-            let buffer_position = packer.pack(glyph.width, glyph.height)
-                .ok_or(VtrlError::Renderer("Unable to fit font into atlas!".to_string()))?;
+            let buffer_position =
+                packer
+                    .pack(glyph.width, glyph.height)
+                    .ok_or(VtrlError::Renderer(
+                        "Unable to fit font into atlas!".to_string(),
+                    ))?;
 
             bitmap.put(
                 &glyph.buffer,
@@ -115,7 +119,7 @@ impl FontAtlas {
         unsafe {
             gl::TexSubImage3D(
                 gl::TEXTURE_2D_ARRAY,
-                0 as i32,
+                0_i32,
                 0, // x offset
                 0, // y offset
                 layer as i32,

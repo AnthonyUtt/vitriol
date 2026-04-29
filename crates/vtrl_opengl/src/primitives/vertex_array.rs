@@ -46,6 +46,7 @@ impl VertexArray {
         }
     }
 
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn link_attributes(
         &self,
         vbo: &VertexBuffer,
@@ -158,5 +159,11 @@ impl VertexArray {
         self.index_buffer.unbind();
 
         self.vertex_buffers.push(buf);
+    }
+}
+
+impl Default for VertexArray {
+    fn default() -> Self {
+        Self::new()
     }
 }

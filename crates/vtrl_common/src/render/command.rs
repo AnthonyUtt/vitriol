@@ -1,8 +1,6 @@
 use std::sync::Arc;
 use ultraviolet::{Vec2, Vec4};
 
-use super::camera::Camera;
-
 pub type FramebufferId = u32;
 
 #[derive(Debug, Clone, Copy)]
@@ -25,7 +23,9 @@ pub enum BlendMode {
 #[derive(Debug, Clone)]
 pub enum RenderCommand {
     // Frame orchestration
-    BeginFrame { clear_color: Vec4 },
+    BeginFrame {
+        clear_color: Vec4,
+    },
     EndFrame,
 
     // Render pass orchestration
@@ -41,8 +41,12 @@ pub enum RenderCommand {
     Batch(Vec<RenderCommand>),
 
     // Rendering
-    DrawQuads { instances: Arc<[QuadInstance]> },
-    DrawText { instances: Arc<[GlyphInstance]> },
+    DrawQuads {
+        instances: Arc<[QuadInstance]>,
+    },
+    DrawText {
+        instances: Arc<[GlyphInstance]>,
+    },
 }
 
 #[repr(C)]

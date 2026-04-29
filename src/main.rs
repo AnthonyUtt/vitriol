@@ -49,26 +49,18 @@ fn main() -> Result<()> {
             debug_println!("FPS: {fps:.1}");
         })
         .with_system(ScheduleSlot::Init, |world, asset_mgr| {
-            let walk_path = Path::new("./src/assets/walk.png");
-            let (walk_handle, _) = asset_mgr
-                .load::<Texture>(walk_path)
-                .unwrap();
+            let walk_path = Path::new("assets/walk.png");
+            let (walk_handle, _) = asset_mgr.load::<Texture>(walk_path).unwrap();
 
-            let idle_path = Path::new("./src/assets/idle.png");
-            let (idle_handle, _) = asset_mgr
-                .load::<Texture>(idle_path)
-                .unwrap();
+            let idle_path = Path::new("assets/idle.png");
+            let (idle_handle, _) = asset_mgr.load::<Texture>(idle_path).unwrap();
 
             {
                 // TODO: load these animations from a file
                 let mut store = world.get_resource_mut::<AnimationStore>().unwrap();
                 let frames = |row: u32, flip: bool| {
                     let y_offset = row as f32 * 0.2;
-                    let (x1, x2) = if flip {
-                        (0.25, 0.)
-                    } else {
-                        (0., 0.25)
-                    };
+                    let (x1, x2) = if flip { (0.25, 0.) } else { (0., 0.25) };
 
                     vec![
                         AnimationFrame {
@@ -119,7 +111,7 @@ fn main() -> Result<()> {
                 })
                 .with_component(VelocityComponent {
                     direction: Vec2::zero(),
-                    speed: 60.
+                    speed: 60.,
                 })
                 .with_component(Direction::Down)
                 .with_component(SpriteComponent {
@@ -141,46 +133,53 @@ fn main() -> Result<()> {
         })
         .with_system(ScheduleSlot::Update, |w, _| {
             let dt = w.get_resource::<DeltaTime>().unwrap().0;
-            let view = w.view_mut::<(TransformComponent, VelocityComponent, Direction), With<PlayerTag>>();
+            let view =
+                w.view_mut::<(TransformComponent, VelocityComponent, Direction), With<PlayerTag>>();
 
             let (entity, (mut xform, mut velocity, mut dir)) = view.iter().next().unwrap();
 
             let mut new_direction = Vec2::zero();
-            if input::is_key_down(Key::W) { new_direction.y += -1.; }
-            if input::is_key_down(Key::S) { new_direction.y += 1.; }
-            if input::is_key_down(Key::A) { new_direction.x += -1.; }
-            if input::is_key_down(Key::D) { new_direction.x += 1.; }
+            if input::is_key_down(Key::W) {
+                new_direction.y += -1.;
+            }
+            if input::is_key_down(Key::S) {
+                new_direction.y += 1.;
+            }
+            if input::is_key_down(Key::A) {
+                new_direction.x += -1.;
+            }
+            if input::is_key_down(Key::D) {
+                new_direction.x += 1.;
+            }
 
             // Set walk animation based on direction
-            let mut anim = w.get_component_mut::<AnimationComponent>(entity)
-                .unwrap();
-            let player_animations = w.get_component::<PlayerSpritesheets>(entity)
-                .unwrap();
+            let mut anim = w.get_component_mut::<AnimationComponent>(entity).unwrap();
+            let player_animations = w.get_component::<PlayerSpritesheets>(entity).unwrap();
             match new_direction {
                 Vec2 { x: 0., y: 1. } => {
                     *dir = Direction::Down;
-                },
+                }
                 Vec2 { x: 1., y: 1. } => {
                     *dir = Direction::DownRight;
-                },
+                }
                 Vec2 { x: 1., y: 0. } => {
                     *dir = Direction::Right;
-                },
+                }
                 Vec2 { x: 1., y: -1. } => {
                     *dir = Direction::UpRight;
-                },
+                }
                 Vec2 { x: 0., y: -1. } => {
                     *dir = Direction::Up;
-                },
+                }
                 Vec2 { x: -1., y: -1. } => {
                     *dir = Direction::UpLeft;
-                },
+                }
                 Vec2 { x: -1., y: 0. } => {
                     *dir = Direction::Left;
-                },
+                }
                 Vec2 { x: -1., y: 1. } => {
                     *dir = Direction::DownLeft;
-                },
+                }
                 _ => {}
             }
 

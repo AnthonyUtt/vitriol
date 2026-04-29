@@ -1,9 +1,5 @@
 use std::collections::HashMap;
-use string_interner::{
-    StringInterner,
-    backend::BucketBackend,
-    symbol::SymbolU32,
-};
+use string_interner::{StringInterner, backend::BucketBackend, symbol::SymbolU32};
 
 use vtrl_common::prelude::*;
 

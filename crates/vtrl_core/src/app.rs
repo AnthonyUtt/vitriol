@@ -25,6 +25,7 @@ pub struct App {
 impl App {
     pub fn new() -> App {
         {
+            dotenvy::dotenv().ok();
             use env_logger::Env;
 
             #[cfg(debug_assertions)]
@@ -164,6 +165,7 @@ impl MessageHandler for SystemMessageHandler {
     }
 }
 
+#[allow(dead_code)]
 struct MessageSink;
 impl MessageHandler for MessageSink {
     fn call(&self, msg: &dyn Message) {

@@ -16,6 +16,12 @@ pub struct ShaderProgram {
     pub frag_shader: Shader,
 }
 
+impl Default for ShaderProgram {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ShaderProgram {
     pub fn new() -> Self {
         ShaderProgram {
@@ -31,7 +37,7 @@ impl ShaderProgram {
         self
     }
 
-    pub unsafe fn with_vert_shader_path(/*mut*/ self, _path: String) -> Self {
+    pub fn with_vert_shader_path(/*mut*/ self, _path: String) -> Self {
         todo!()
     }
 

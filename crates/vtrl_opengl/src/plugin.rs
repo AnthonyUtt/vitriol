@@ -14,9 +14,7 @@ impl Plugin for Renderer2DPlugin {
 
         world.add_system(ScheduleSlot::Render, |w, mgr| {
             let animations = w.get_resource::<AnimationStore>().unwrap();
-            let dt = w.get_resource::<DeltaTime>()
-                .map(|t| t.0)
-                .unwrap_or(0.);
+            let dt = w.get_resource::<DeltaTime>().map(|t| t.0).unwrap_or(0.);
 
             context::push_command(RenderCommand::BeginPass {
                 name: "world",
@@ -39,19 +37,24 @@ impl Plugin for Renderer2DPlugin {
                 });
             }
 
-            context::push_command(RenderCommand::DrawQuads { instances: instances.into() });
+            context::push_command(RenderCommand::DrawQuads {
+                instances: instances.into(),
+            });
 
             let view = w.view::<(SpriteComponent, TransformComponent), ()>();
             let mut instances: Vec<QuadInstance> = Vec::new();
             for (entity, (sprite, xform)) in view.iter() {
                 let (tex_id, uv) = if w.has_component::<AnimationComponent>(entity) {
-                    let mut anim = w.get_component_mut::<AnimationComponent>(entity)
-                        .unwrap();
-                    let tex_id: u32 = mgr.get::<Texture>(anim.texture_handle)
+                    let mut anim = w.get_component_mut::<AnimationComponent>(entity).unwrap();
+                    let tex_id: u32 = mgr
+                        .get::<Texture>(anim.texture_handle)
                         .map(|t| t.id)
                         .unwrap_or(0);
-                    let frames = animations.get(anim.active_animation.to_string())
-                        .unwrap_or_else(|| panic!("Animation not found! {}", anim.active_animation));
+                    let frames = animations
+                        .get(anim.active_animation.to_string())
+                        .unwrap_or_else(|| {
+                            panic!("Animation not found! {}", anim.active_animation)
+                        });
                     let frame = frames[anim.current_frame];
 
                     // update animation timing & frame if necessary
@@ -66,7 +69,8 @@ impl Plugin for Renderer2DPlugin {
 
                     (tex_id, frames[anim.current_frame].uv)
                 } else {
-                    let tex_id: u32 = mgr.get::<Texture>(sprite.texture_handle)
+                    let tex_id: u32 = mgr
+                        .get::<Texture>(sprite.texture_handle)
                         .map(|t| t.id)
                         .unwrap_or(0);
 
@@ -84,7 +88,9 @@ impl Plugin for Renderer2DPlugin {
                     tex: tex_id as f32,
                 });
             }
-            context::push_command(RenderCommand::DrawQuads { instances: instances.into() });
+            context::push_command(RenderCommand::DrawQuads {
+                instances: instances.into(),
+            });
 
             context::push_command(RenderCommand::BeginPass {
                 name: "text",
@@ -99,7 +105,9 @@ impl Plugin for Renderer2DPlugin {
                 instances.extend(layout_text(&text, &xform));
             }
 
-            context::push_command(RenderCommand::DrawText { instances: instances.into() });
+            context::push_command(RenderCommand::DrawText {
+                instances: instances.into(),
+            });
         });
 
         world.add_system(ScheduleSlot::Last, |_, _| {
@@ -143,7 +151,9 @@ impl Plugin for DebugOverlayPlugin {
                 clear: None,
                 blend_mode: Some(BlendMode::PremultipliedAlpha),
             });
-            context::push_command(RenderCommand::DrawText { instances: instances.into() });
+            context::push_command(RenderCommand::DrawText {
+                instances: instances.into(),
+            });
         });
     }
 }
@@ -196,9 +206,7 @@ fn layout_overlay(
     for (i, line) in logical_lines.iter().enumerate() {
         let pen_start = match anchor {
             Anchor::TopLeft | Anchor::BottomLeft => padding.x,
-            Anchor::TopRight | Anchor::BottomRight => {
-                window.x - padding.x - line_widths[i]
-            }
+            Anchor::TopRight | Anchor::BottomRight => window.x - padding.x - line_widths[i],
         };
         let baseline = first_baseline + i as f32 * line_advance;
         let mut pen_x = pen_start;

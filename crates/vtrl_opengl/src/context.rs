@@ -32,7 +32,7 @@ pub fn push_command(cmd: RenderCommand) {
 }
 
 pub fn process_events() {
-        RENDER_CONTEXT.lock().unwrap().process_events();
+    RENDER_CONTEXT.lock().unwrap().process_events();
 }
 
 pub fn process_queue() {
@@ -209,12 +209,8 @@ impl RenderContext {
                     }
                     Size(width, height) => {
                         self.window_size = Vec2::new(width as f32, height as f32);
-                        self.matrix = Self::ortho_top_left_matrix(
-                            width as f32,
-                            height as f32,
-                            -1.,
-                            1.,
-                        );
+                        self.matrix =
+                            Self::ortho_top_left_matrix(width as f32, height as f32, -1., 1.);
                         let _ =
                             message_bus::send(WindowMessage::Resize(width as u32, height as u32));
                     }
@@ -336,7 +332,7 @@ impl RenderContext {
                     gl::Enable(gl::BLEND);
                     gl::BlendEquation(gl::FUNC_ADD);
                     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-                },
+                }
 
                 // Additive: glowing effects, particles, light
                 // src * src_alpha + dst * 1
@@ -344,7 +340,7 @@ impl RenderContext {
                     gl::Enable(gl::BLEND);
                     gl::BlendEquation(gl::FUNC_ADD);
                     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE);
-                },
+                }
 
                 // Multiply: darkening, shadows, color mixing
                 // src * dst + dst * 0
@@ -352,7 +348,7 @@ impl RenderContext {
                     gl::Enable(gl::BLEND);
                     gl::BlendEquation(gl::FUNC_ADD);
                     gl::BlendFunc(gl::DST_COLOR, gl::ZERO);
-                },
+                }
 
                 // Pre-multiplied alpha: RGB already mutliplied by alpha
                 // src * 1 + dst * (1 - src_alpha)
@@ -360,7 +356,7 @@ impl RenderContext {
                     gl::Enable(gl::BLEND);
                     gl::BlendEquation(gl::FUNC_ADD);
                     gl::BlendFunc(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
-                },
+                }
 
                 // Screen: opposite of multiply, lightens. Good for glow, fog, light overlays
                 // src * (1 - dst) + dst * 1
@@ -368,7 +364,7 @@ impl RenderContext {
                     gl::Enable(gl::BLEND);
                     gl::BlendEquation(gl::FUNC_ADD);
                     gl::BlendFunc(gl::ONE_MINUS_DST_COLOR, gl::ONE);
-                },
+                }
 
                 // Subtract: src removes from dst. Shadows, darkening effects
                 // dst - src * src_alpha
@@ -376,7 +372,7 @@ impl RenderContext {
                     gl::Enable(gl::BLEND);
                     gl::BlendEquation(gl::FUNC_REVERSE_SUBTRACT);
                     gl::BlendFuncSeparate(gl::SRC_ALPHA, gl::ONE, gl::ONE, gl::ONE);
-                },
+                }
 
                 // Replace: no blending, just overwrite. UI backgrounds, clear rects
                 BlendMode::Replace => {
@@ -392,12 +388,22 @@ impl RenderContext {
 
     pub fn end_frame(&self) {}
 
-    pub fn begin_pass(&mut self, name: &'static str, target: RenderTarget, clear: Option<Vec4>, blend_mode: Option<BlendMode>) {
+    pub fn begin_pass(
+        &mut self,
+        name: &'static str,
+        target: RenderTarget,
+        clear: Option<Vec4>,
+        blend_mode: Option<BlendMode>,
+    ) {
         log::trace!("Starting render pass: {name}");
 
         match target {
-            RenderTarget::Framebuffer(id) => unsafe { gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, id); },
-            RenderTarget::Screen => unsafe { gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, 0); },
+            RenderTarget::Framebuffer(id) => unsafe {
+                gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, id);
+            },
+            RenderTarget::Screen => unsafe {
+                gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, 0);
+            },
         }
 
         if let Some(color) = clear {
@@ -509,13 +515,13 @@ impl RenderQueue {
                 blend_mode,
             } => {
                 ctx.begin_pass(name, target, clear, blend_mode);
-            },
+            }
             RenderCommand::EndPass => ctx.end_pass(),
             RenderCommand::Batch(batch) => {
                 for cmd in batch.iter() {
                     Self::execute(cmd.clone(), ctx);
                 }
-            },
+            }
             RenderCommand::DrawQuads { instances } => ctx.draw_quad_instances(&instances),
             RenderCommand::DrawText { instances } => ctx.draw_text_instances(&instances),
         }

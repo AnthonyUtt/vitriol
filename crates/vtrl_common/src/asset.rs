@@ -2,7 +2,8 @@ use lazy_static::lazy_static;
 use std::{
     any::{Any, TypeId},
     collections::HashMap,
-    path::Path,
+    fs::File,
+    path::{Path, PathBuf},
     sync::{Arc, RwLock},
 };
 use string_interner::{StringInterner, backend::BucketBackend, symbol::SymbolU32};
@@ -31,7 +32,7 @@ pub fn resolved(value: &str) -> Option<Symbol> {
 }
 
 pub trait Asset: Sized {
-    fn load(path: &Path) -> Result<Self>;
+    fn load(bytes: Vec<u8>) -> Result<Self>;
 }
 
 struct AssetStore<T: Asset> {
@@ -62,8 +63,31 @@ impl<T: Asset> Default for AssetStore<T> {
     }
 }
 
-#[derive(Default)]
+trait AssetSource {
+    fn read(&self, path: &Path) -> Result<Vec<u8>>;
+}
+
+#[derive(Debug)]
+struct DirectorySource {
+    root: PathBuf,
+}
+
+impl AssetSource for DirectorySource {
+    fn read(&self, path: &Path) -> Result<Vec<u8>> {
+        let buf = std::fs::read(self.root.join(path))?;
+        Ok(buf)
+    }
+}
+
+#[allow(dead_code)]
+struct PackSource {
+    index: HashMap<String, (u64, u64)>,
+    file: File,
+}
+// TODO: impl AssetSource for PackSource
+
 pub struct AssetManager {
+    asset_source: Box<dyn AssetSource>,
     stores: HashMap<TypeId, Box<dyn Any>>,
 }
 
@@ -80,7 +104,8 @@ impl AssetManager {
             .or_insert_with(|| Box::new(AssetStore::<T>::new()))
             .downcast_mut::<AssetStore<T>>()
             .unwrap();
-        let data = T::load(path)?;
+        let raw_bytes = self.asset_source.read(path)?;
+        let data = T::load(raw_bytes)?;
         let key = store.insert(path, data);
         let data_ref = store.get(key).unwrap();
         Ok((key, data_ref))
@@ -91,5 +116,22 @@ impl AssetManager {
             .get(&TypeId::of::<T>())
             .and_then(|s| s.downcast_ref::<AssetStore<T>>())
             .and_then(|s| s.get(key))
+    }
+}
+
+impl Default for AssetManager {
+    fn default() -> Self {
+        // TODO: for release builds, pull from the asset pack instead
+        // of using the root directory
+        let asset_source = DirectorySource {
+            root: std::env::var("VTRL_PROJECT_ROOT")
+                .map(PathBuf::from)
+                .unwrap_or_else(|_| PathBuf::from("assets")),
+        };
+
+        Self {
+            asset_source: Box::new(asset_source),
+            stores: HashMap::new(),
+        }
     }
 }

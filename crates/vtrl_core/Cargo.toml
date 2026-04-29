@@ -10,3 +10,4 @@ vtrl_plugins = { path = "../vtrl_plugins" }
 vtrl_opengl = { path = "../vtrl_opengl" }
 env_logger.workspace = true
 ctrlc = "3"
+dotenvy.workspace = true

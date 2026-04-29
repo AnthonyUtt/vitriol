@@ -41,7 +41,6 @@ pub fn process_messages(limit: Option<usize>) -> Result<()> {
 struct Envelope {
     pub message: Box<dyn Message>,
     pub timestamp: Instant,
-    pub id: u64,
 }
 
 enum HandlerType {
@@ -106,7 +105,6 @@ impl MessageBus {
         let envelope = Envelope {
             message: Box::new(message),
             timestamp: Instant::now(),
-            id,
         };
 
         self.sender

@@ -1,3 +1,4 @@
+use once_cell::sync::Lazy;
 use std::{
     any::TypeId,
     sync::{
@@ -5,7 +6,6 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
 };
-use once_cell::sync::Lazy;
 
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
@@ -127,7 +127,9 @@ impl InputState {
 }
 
 impl Default for InputState {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 pub struct InputPlugin;
@@ -145,17 +147,17 @@ impl MessageHandler for InputHandler {
             match msg {
                 WindowMessage::Key(code, pressed) => {
                     GLOBAL_INPUT_STATE.set_key(*code, *pressed);
-                },
+                }
                 WindowMessage::MouseButton(button, pressed) => {
                     GLOBAL_INPUT_STATE.set_mouse_button(*button, *pressed);
-                },
+                }
                 WindowMessage::CursorPosition(x, y) => {
                     GLOBAL_INPUT_STATE.set_mouse_pos(*x, *y);
-                },
+                }
                 WindowMessage::Scroll(x, y) => {
                     GLOBAL_INPUT_STATE.set_mouse_scroll(*x, *y);
-                },
-                _ => {},
+                }
+                _ => {}
             }
         }
     }

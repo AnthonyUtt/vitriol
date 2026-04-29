@@ -156,7 +156,7 @@ impl TextureArray {
         self.unbind();
     }
 
-    fn map_smaller_texture_to_padded_bytes(&self, bytes: &Vec<u8>, dimensions: UVec2) -> Vec<u8> {
+    fn map_smaller_texture_to_padded_bytes(&self, bytes: &[u8], dimensions: UVec2) -> Vec<u8> {
         let byte_count = self.width * self.height * 4; // each rgba color is 4 bytes
         let mut buffer: Vec<u8> = vec![0; byte_count as usize];
 

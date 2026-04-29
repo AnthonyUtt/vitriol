@@ -1,6 +1,5 @@
 extern crate gl;
 
-use std::path::Path;
 use image::EncodableLayout;
 
 use vtrl_common::prelude::*;
@@ -68,8 +67,8 @@ impl Texture {
 }
 
 impl Asset for Texture {
-    fn load(path: &Path) -> Result<Texture> {
-        let img = image::open(path)?.into_rgba8();
+    fn load(bytes: Vec<u8>) -> Result<Texture> {
+        let img = image::load_from_memory(&bytes)?.into_rgba8();
 
         let tex_data = TextureData {
             bytes: img.as_bytes().to_vec(),

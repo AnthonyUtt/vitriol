@@ -19,6 +19,7 @@ string-interner = "0.19"
 freetype-rs = { version = "0.37", features = ["bundled"] }
 glfw = "*"
 gl = "*"
+dotenvy = "0.15"
 
 [package]
 name = "vitriol"

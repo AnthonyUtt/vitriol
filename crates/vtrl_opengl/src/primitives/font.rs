@@ -1,9 +1,6 @@
 extern crate freetype as ft;
 
-use std::{
-    collections::HashMap,
-    path::Path,
-};
+use std::collections::HashMap;
 
 use vtrl_common::prelude::*;
 
@@ -16,9 +13,9 @@ pub struct Font {
 }
 
 impl Asset for Font {
-    fn load(path: &Path) -> Result<Font> {
+    fn load(bytes: Vec<u8>) -> Result<Font> {
         let library = ft::Library::init()?;
-        let face = library.new_face(path, 0)?;
+        let face = library.new_memory_face(bytes, 0)?;
         face.set_pixel_sizes(0, DEFAULT_PIXEL_HEIGHT)?;
 
         let glyphs = build_glyph_map(&face)?;
