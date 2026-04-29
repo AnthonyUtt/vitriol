@@ -1,6 +1,6 @@
-use std::path::{Path, PathBuf};
 use serde::de::{DeserializeSeed, Deserializer, MapAccess, Visitor};
 use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
 
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
@@ -33,7 +33,9 @@ struct EntityDef {
     components: Vec<ComponentBox>,
 }
 
-fn deserialize_components<'de, D>(deserializer: D) -> std::result::Result<Vec<ComponentBox>, D::Error>
+fn deserialize_components<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Vec<ComponentBox>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -51,7 +53,10 @@ impl<'de> Visitor<'de> for ComponentMapVisitor {
         f.write_str("a map of component name to component value")
     }
 
-    fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> std::result::Result<Self::Value, A::Error> {
+    fn visit_map<A: MapAccess<'de>>(
+        self,
+        mut map: A,
+    ) -> std::result::Result<Self::Value, A::Error> {
         let mut out = Vec::with_capacity(map.size_hint().unwrap_or(0));
         while let Some(name) = map.next_key::<String>()? {
             let component = map.next_value_seed(ComponentSeed { name: &name })?;
@@ -106,8 +111,9 @@ impl Plugin for SceneManagerPlugin {
                 // Bypass the asset cache: scenes are one-shot data and
                 // EntityDef holds non-Clone closures, so caching+cloning
                 // doesn't fit. Read raw bytes and parse owned.
-                let bytes = asset_mgr.read_bytes(&path)
-                    .unwrap_or_else(|e| panic!("Unable to read scene file '{}': {e}", path.display()));
+                let bytes = asset_mgr.read_bytes(&path).unwrap_or_else(|e| {
+                    panic!("Unable to read scene file '{}': {e}", path.display())
+                });
                 let scene: Scene = ron::de::from_bytes(&bytes)
                     .unwrap_or_else(|e| panic!("Unable to parse scene '{}': {e}", path.display()));
 

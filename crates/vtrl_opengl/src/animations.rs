@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use string_interner::{StringInterner, backend::BucketBackend, symbol::SymbolU32};
 
 use vtrl_common::prelude::*;

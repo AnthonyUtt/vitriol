@@ -1,22 +1,21 @@
+use serde::de::DeserializeOwned;
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::sync::LazyLock;
-use serde::de::DeserializeOwned;
 
 use vtrl_common::prelude::*;
 
 use crate::prelude::*;
 
-pub static COMPONENT_REGISTRY: LazyLock<ComponentRegistry> = LazyLock::new(ComponentRegistry::build);
+pub static COMPONENT_REGISTRY: LazyLock<ComponentRegistry> =
+    LazyLock::new(ComponentRegistry::build);
 
 /// A pre-deserialized component, captured as an opaque applier that adds the
 /// typed value to an `EntityBuilder` when invoked.
 pub type ComponentBox = Box<dyn FnOnce(&mut EntityBuilder) + Send + Sync>;
 
 type DeserializeFn = Box<
-    dyn for<'de> Fn(&mut dyn erased_serde::Deserializer<'de>) -> Result<ComponentBox>
-        + Send
-        + Sync,
+    dyn for<'de> Fn(&mut dyn erased_serde::Deserializer<'de>) -> Result<ComponentBox> + Send + Sync,
 >;
 
 pub struct ComponentRegistration {
