@@ -2,6 +2,8 @@ use std::any::{Any, TypeId};
 use std::cell::{Ref, RefCell, RefMut};
 use std::collections::HashMap;
 
+use vtrl_common::prelude::*;
+
 use crate::entity::Entity;
 use crate::query::*;
 use crate::world::World;
@@ -24,6 +26,8 @@ pub trait Component: Any + Send + Sync + 'static {
     }
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
+
+    fn register_script_api(engine: &mut rhai::Engine);
 }
 
 #[derive(Default)]

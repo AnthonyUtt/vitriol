@@ -59,7 +59,7 @@ impl Plugin for Renderer2DPlugin {
                 blend_mode: Some(BlendMode::Alpha),
             });
 
-            let view = w.view::<(QuadComponent, TransformComponent), ()>();
+            let view = w.view::<(Quad, Transform), ()>();
             let mut instances: Vec<QuadInstance> = Vec::new();
             for (_, (quad, xform)) in view.iter() {
                 instances.push(QuadInstance {
@@ -77,11 +77,11 @@ impl Plugin for Renderer2DPlugin {
                 instances: instances.into(),
             });
 
-            let view = w.view::<(SpriteComponent, TransformComponent), ()>();
+            let view = w.view::<(Sprite, Transform), ()>();
             let mut instances: Vec<QuadInstance> = Vec::new();
             for (entity, (sprite, xform)) in view.iter() {
-                let (tex_id, uv) = if w.has_component::<AnimationComponent>(entity) {
-                    let mut anim = w.get_component_mut::<AnimationComponent>(entity).unwrap();
+                let (tex_id, uv) = if w.has_component::<Animation>(entity) {
+                    let mut anim = w.get_component_mut::<Animation>(entity).unwrap();
                     let tex_id: u32 = mgr
                         .get::<Texture>(anim.texture_handle)
                         .map(|t| t.id)
@@ -135,7 +135,7 @@ impl Plugin for Renderer2DPlugin {
                 blend_mode: Some(BlendMode::PremultipliedAlpha),
             });
 
-            let view = w.view::<(TextComponent, TransformComponent), ()>();
+            let view = w.view::<(Text, Transform), ()>();
             let mut instances: Vec<GlyphInstance> = Vec::new();
             for (_, (text, xform)) in view.iter() {
                 instances.extend(layout_text(&text, &xform));
@@ -194,7 +194,7 @@ impl Plugin for DebugOverlayPlugin {
     }
 }
 
-fn layout_text(_text: &TextComponent, _xform: &TransformComponent) -> Vec<GlyphInstance> {
+fn layout_text(_text: &Text, _xform: &Transform) -> Vec<GlyphInstance> {
     // TODO: walk glyphs in `text.text`, splitting on '\n', advancing by
     // glyph metrics horizontally and `style.line_height * style.size`
     // vertically. Use the FreeType-backed font atlas to resolve UVs and

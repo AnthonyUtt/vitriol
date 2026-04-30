@@ -117,6 +117,7 @@ impl App {
         self.plugins.insert(Renderer2DPlugin);
         self.plugins.insert(TimePlugin);
         self.plugins.insert(InputPlugin);
+        self.plugins.insert(EntityScriptingPlugin);
         #[cfg(debug_assertions)]
         self.plugins.insert(DebugOverlayPlugin::default());
         self
@@ -138,6 +139,11 @@ impl App {
         render_context::init(WindowSettings::default())
             .expect("Unable to initialize render context!");
         self.plugins.bootstrap(&mut self.world, &mut self.assets);
+
+        #[cfg(debug_assertions)]
+        self.world.add_system(ScheduleSlot::PreUpdate, |_, mgr| {
+            mgr.poll_hot_reload();
+        });
 
         self.world.add_system(ScheduleSlot::Last, |_, _| {
             render_context::process_events();

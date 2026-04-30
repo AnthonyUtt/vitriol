@@ -23,6 +23,8 @@ dotenvy = "0.15"
 ron = "0.12"
 inventory = "0.3"
 erased-serde = "0.4"
+rhai = { version = "1.24", features = ["f32_float"] }
+notify = "8.2"
 
 [package]
 name = "vitriol"

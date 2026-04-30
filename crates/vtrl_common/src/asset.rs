@@ -1,12 +1,17 @@
 use lazy_static::lazy_static;
+use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{
     any::{Any, TypeId},
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs::File,
+    io,
     ops::Deref,
     path::{Path, PathBuf},
-    sync::{Arc, LazyLock, RwLock},
+    sync::{
+        Arc, LazyLock, RwLock,
+        mpsc::{Receiver, channel},
+    },
 };
 use string_interner::{StringInterner, backend::BucketBackend, symbol::SymbolU32};
 
@@ -114,17 +119,21 @@ impl<T: Asset> Default for AssetStore<T> {
 
 trait AssetSource {
     fn read(&self, path: &Path) -> Result<Vec<u8>>;
+    fn root(&self) -> Option<&Path>;
 }
 
 #[derive(Debug)]
 struct DirectorySource {
-    root: PathBuf,
+    pub root: PathBuf,
 }
 
 impl AssetSource for DirectorySource {
     fn read(&self, path: &Path) -> Result<Vec<u8>> {
         let buf = std::fs::read(self.root.join(path))?;
         Ok(buf)
+    }
+    fn root(&self) -> Option<&Path> {
+        Some(self.root.as_path())
     }
 }
 
@@ -138,11 +147,87 @@ struct PackSource {
 pub struct AssetManager {
     asset_source: Box<dyn AssetSource>,
     stores: HashMap<TypeId, Box<dyn Any>>,
+    watcher: Option<RecommendedWatcher>,
+    watch_receiver: Option<Receiver<notify::Result<Event>>>,
+    path_to_type_id: HashMap<String, TypeId>,
+    type_id_to_name: HashMap<TypeId, String>,
 }
 
 impl AssetManager {
     pub fn new() -> Self {
-        Self::default()
+        let mut mgr = Self::default();
+        #[cfg(debug_assertions)]
+        mgr.init_hot_reload();
+        mgr
+    }
+
+    pub fn init_hot_reload(&mut self) {
+        let (tx, rx) = channel();
+        let mut watcher = notify::recommended_watcher(tx).unwrap();
+
+        if let Some(path) = self.asset_source.root() {
+            watcher.watch(path, RecursiveMode::Recursive).unwrap();
+            log::info!("Hot reload watching: {:?}", path);
+        }
+
+        self.watcher = Some(watcher);
+        self.watch_receiver = Some(rx);
+
+        for reg in inventory::iter::<AssetRegistration> {
+            self.type_id_to_name
+                .insert((reg.type_id_fn)(), reg.name.to_string());
+        }
+    }
+
+    pub fn poll_hot_reload(&mut self) {
+        let receiver = match &self.watch_receiver {
+            Some(r) => r,
+            None => return,
+        };
+
+        let mut changed_paths: HashSet<PathBuf> = HashSet::new();
+
+        for event in receiver.try_iter().flatten() {
+            if matches!(event.kind, EventKind::Modify(_) | EventKind::Create(_)) {
+                for path in event.paths {
+                    changed_paths.insert(path);
+                }
+            }
+        }
+
+        for path in changed_paths {
+            let relative = {
+                let root = self.asset_source.root().unwrap();
+                path.strip_prefix(root).unwrap()
+            };
+            let rel_str = relative.to_str().unwrap_or_default().to_string();
+
+            let type_id = match self.path_to_type_id.get(&rel_str) {
+                Some(id) => *id,
+                None => continue, // not a tracked asset
+            };
+
+            let type_name = match self.type_id_to_name.get(&type_id) {
+                Some(name) => name.clone(),
+                None => continue,
+            };
+
+            match ASSET_REGISTRY.load(&type_name, self, relative) {
+                Ok(_) => {
+                    log::info!("Asset hot reloaded! {}", rel_str);
+                }
+                // Editor atomic-saves (write-temp + rename) briefly leave the
+                // path missing between events. A follow-up event after the
+                // rename completes will reload it, so don't surface this as
+                // an error.
+                Err(VtrlError::Io(e)) if e.kind() == io::ErrorKind::NotFound => {
+                    log::debug!("Hot reload skipped (file in transition): {}", rel_str);
+                }
+                Err(e) => {
+                    log::error!("Hot reload failed for {}: {}", rel_str, e);
+                }
+            }
+        }
     }
 
     /// Read raw bytes from the asset source without caching. Useful for
@@ -164,6 +249,10 @@ impl AssetManager {
         let data = T::load(raw_bytes)?;
         let key = store.insert(path, data);
         let data_ref = store.get(key).unwrap();
+
+        self.path_to_type_id
+            .insert(path.to_str().unwrap().to_string(), TypeId::of::<T>());
+
         Ok((key, data_ref))
     }
 
@@ -189,6 +278,10 @@ impl Default for AssetManager {
         Self {
             asset_source: Box::new(asset_source),
             stores: HashMap::new(),
+            watch_receiver: None,
+            watcher: None,
+            path_to_type_id: HashMap::new(),
+            type_id_to_name: HashMap::new(),
         }
     }
 }

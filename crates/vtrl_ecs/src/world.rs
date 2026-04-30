@@ -3,6 +3,8 @@ use std::cell::{Ref, RefMut};
 use std::collections::VecDeque;
 use std::rc::Rc;
 
+use vtrl_common::prelude::rhai;
+
 use crate::component::*;
 use crate::entity::Entity;
 use crate::prelude::System;
@@ -161,6 +163,26 @@ impl World {
             self.components.get_mut::<T>(entity)
         } else {
             None
+        }
+    }
+
+    pub fn get_component_erased(
+        &self,
+        entity: Entity,
+        component_name: &str,
+    ) -> Option<rhai::Dynamic> {
+        let getter = COMPONENT_REGISTRY.script_getters.get(component_name)?;
+        getter(self, entity)
+    }
+
+    pub fn set_component_erased(
+        &mut self,
+        entity: Entity,
+        component_name: &str,
+        value: rhai::Dynamic,
+    ) {
+        if let Some(setter) = COMPONENT_REGISTRY.script_setters.get(component_name) {
+            setter(self, entity, value);
         }
     }
 

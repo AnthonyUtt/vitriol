@@ -6,6 +6,7 @@ mod macros;
 mod message;
 mod message_bus;
 mod render;
+mod scripting;
 
 #[rustfmt::skip]
 pub mod prelude {
@@ -19,7 +20,9 @@ pub mod prelude {
     };
     pub use serde;
     pub use inventory;
-    pub use vtrl_macros::asset;
+    pub use rhai;
+
+    pub use vtrl_macros::{asset, scriptable};
 
     // Utilities
     pub use crate::asset::*;
@@ -30,6 +33,7 @@ pub mod prelude {
         pub use crate::message_bus::*;
     }
     pub use crate::render::*;
+    pub use crate::scripting::*;
 
     // Macros
     pub use crate::c_str;

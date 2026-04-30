@@ -39,6 +39,12 @@ pub enum VtrlError {
     Serde(#[from] erased_serde::Error),
 
     #[error(transparent)]
+    Rhai(#[from] rhai::ParseError),
+
+    #[error(transparent)]
+    StringParse(#[from] std::string::FromUtf8Error),
+
+    #[error(transparent)]
     Unknown(#[from] anyhow::Error),
 }
 

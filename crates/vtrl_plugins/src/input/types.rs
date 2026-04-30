@@ -1,5 +1,8 @@
+use vtrl_common::prelude::*;
+
 /// Mouse buttons.
 #[repr(u32)]
+#[scriptable]
 #[derive(Copy, Clone)]
 pub enum MouseButton {
     #[doc(hidden)]
@@ -30,7 +33,8 @@ pub enum MouseButton {
 
 /// Input keys.
 #[repr(u32)]
-#[derive(Copy, Clone)]
+#[scriptable]
+#[derive(Copy, Clone, Debug)]
 pub enum Key {
     #[doc(hidden)]
     Space = glfw::Key::Space as u32,

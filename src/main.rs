@@ -22,7 +22,7 @@ enum Direction {
 }
 
 impl Direction {
-    pub fn animation_name(&self, prefix: &'static str) -> String {
+    pub fn animation_name(&self, prefix: String) -> String {
         let dir_string = match self {
             Self::Down => "DOWN",
             Self::DownRight => "DOWN_RIGHT",
@@ -50,71 +50,40 @@ fn main() -> Result<()> {
             w.get_resource_mut::<SceneManager>()
                 .unwrap()
                 .load_scene("scenes/demo.vtrl");
-        })
-        .with_system(ScheduleSlot::Update, |w, _| {
-            let dt = w.get_resource::<DeltaTime>().unwrap().0;
-            let view =
-                w.view_mut::<(TransformComponent, VelocityComponent, Direction), With<PlayerTag>>();
 
-            let (entity, (mut xform, mut velocity, mut dir)) = view.iter().next().unwrap();
+            let mut engine = w.get_resource_mut::<ScriptEngine>().unwrap();
+            engine.register_fn(
+                "animation_name",
+                |dir: Direction, prefix: String| -> String { dir.animation_name(prefix) },
+            );
+            engine.register_fn("direction_from_velocity", |vel: Vec2| -> Direction {
+                let dx = if vel.x > 0.0 {
+                    1
+                } else if vel.x < 0.0 {
+                    -1
+                } else {
+                    0
+                };
+                let dy = if vel.y > 0.0 {
+                    1
+                } else if vel.y < 0.0 {
+                    -1
+                } else {
+                    0
+                };
 
-            let mut new_direction = Vec2::zero();
-            if input::is_key_down(Key::W) {
-                new_direction.y += -1.;
-            }
-            if input::is_key_down(Key::S) {
-                new_direction.y += 1.;
-            }
-            if input::is_key_down(Key::A) {
-                new_direction.x += -1.;
-            }
-            if input::is_key_down(Key::D) {
-                new_direction.x += 1.;
-            }
-
-            // Set walk animation based on direction
-            let mut anim = w.get_component_mut::<AnimationComponent>(entity).unwrap();
-            let player_animations = w.get_component::<PlayerSpritesheets>(entity).unwrap();
-            match new_direction {
-                Vec2 { x: 0., y: 1. } => {
-                    *dir = Direction::Down;
+                match (dx, dy) {
+                    (0, 1) => Direction::Down,
+                    (1, 1) => Direction::DownRight,
+                    (1, 0) => Direction::Right,
+                    (1, -1) => Direction::UpRight,
+                    (0, -1) => Direction::Up,
+                    (-1, -1) => Direction::UpLeft,
+                    (-1, 0) => Direction::Left,
+                    (-1, 1) => Direction::DownLeft,
+                    _ => Direction::Down,
                 }
-                Vec2 { x: 1., y: 1. } => {
-                    *dir = Direction::DownRight;
-                }
-                Vec2 { x: 1., y: 0. } => {
-                    *dir = Direction::Right;
-                }
-                Vec2 { x: 1., y: -1. } => {
-                    *dir = Direction::UpRight;
-                }
-                Vec2 { x: 0., y: -1. } => {
-                    *dir = Direction::Up;
-                }
-                Vec2 { x: -1., y: -1. } => {
-                    *dir = Direction::UpLeft;
-                }
-                Vec2 { x: -1., y: 0. } => {
-                    *dir = Direction::Left;
-                }
-                Vec2 { x: -1., y: 1. } => {
-                    *dir = Direction::DownLeft;
-                }
-                _ => {}
-            }
-
-            if new_direction == Vec2::zero() {
-                anim.texture_handle = player_animations.idle;
-                anim.active_animation = dir.animation_name("IDLE");
-            } else {
-                anim.texture_handle = player_animations.walk;
-                anim.active_animation = dir.animation_name("WALK");
-                new_direction.normalize();
-            }
-            velocity.direction = new_direction;
-
-            xform.position.x += velocity.direction.x * velocity.speed * dt;
-            xform.position.y += velocity.direction.y * velocity.speed * dt;
+            });
         })
         .run()
 }

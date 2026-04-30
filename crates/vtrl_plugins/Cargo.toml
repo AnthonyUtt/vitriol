@@ -11,3 +11,4 @@ glfw.workspace = true
 serde.workspace = true
 ron.workspace = true
 erased-serde.workspace = true
+rhai.workspace = true

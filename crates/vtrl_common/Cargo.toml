@@ -21,3 +21,5 @@ image.workspace = true
 freetype-rs.workspace = true
 ron.workspace = true
 inventory.workspace = true
+rhai.workspace = true
+notify.workspace = true
