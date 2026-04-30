@@ -29,6 +29,8 @@ const DEFAULT_TEX_BYTES: [u8; 4] = [255; 4];
 pub struct Renderer {
     quad_shader: ShaderProgram,
     text_shader: ShaderProgram,
+    // line_shader: ShaderProgram,
+    // circle_shader: ShaderProgram,
     vao: VertexArray,
     _quad_vbo: VertexBuffer,
     instance_vbo: VertexBuffer,
@@ -174,5 +176,17 @@ impl Renderer {
         self.instance_vbo.unbind();
         self.vao.unbind();
         self.text_shader.deactivate();
+    }
+
+    pub fn draw_line_instances(&self, matrix: Mat4, instances: &[LineInstance]) {
+        if instances.is_empty() {
+            return;
+        }
+    }
+
+    pub fn draw_circle_instances(&self, matrix: Mat4, instances: &[CircleInstance]) {
+        if instances.is_empty() {
+            return;
+        }
     }
 }

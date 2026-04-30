@@ -144,6 +144,70 @@ impl Plugin for Renderer2DPlugin {
             context::push_command(RenderCommand::DrawText {
                 instances: instances.into(),
             });
+
+            if let Some(render) = w.get_resource::<RenderDebugColliders>()
+                    && render.0 {
+                context::push_command(RenderCommand::BeginPass {
+                    name: "debug_colliders",
+                    target: RenderTarget::Screen,
+                    clear: None,
+                    blend_mode: Some(BlendMode::Alpha),
+                });
+
+                let view = w.view::<BoxCollider, ()>();
+                let mut instances: Vec<LineInstance> = Vec::new();
+                for (_, collider) in view.iter() {
+                    let pos = &collider.position;
+                    let size = &collider.size;
+
+                    let top_left = Vec2::new(pos.x - (size.x / 2.), pos.y - (size.y / 2.));
+                    let top_right = Vec2::new(pos.x + (size.x / 2.), pos.y - (size.y / 2.));
+                    let bottom_left = Vec2::new(pos.x - (size.x / 2.), pos.y + (size.y / 2.));
+                    let bottom_right = Vec2::new(pos.x + (size.x / 2.), pos.y + (size.y / 2.));
+
+                    instances.push(LineInstance {
+                        start: top_left,
+                        end: top_right,
+                        color: Vec4::new(1., 0., 0., 1.), // red
+                        thickness: 2.,
+                    });
+                    instances.push(LineInstance {
+                        start: top_right,
+                        end: bottom_right,
+                        color: Vec4::new(1., 0., 0., 1.), // red
+                        thickness: 2.,
+                    });
+                    instances.push(LineInstance {
+                        start: bottom_right,
+                        end: bottom_left,
+                        color: Vec4::new(1., 0., 0., 1.), // red
+                        thickness: 2.,
+                    });
+                    instances.push(LineInstance {
+                        start: bottom_left,
+                        end: top_left,
+                        color: Vec4::new(1., 0., 0., 1.), // red
+                        thickness: 2.,
+                    });
+                }
+
+                context::push_command(RenderCommand::DrawLines { instances: instances.into() });
+
+                let view = w.view::<CircleCollider, ()>();
+                let mut instances: Vec<CircleInstance> = Vec::new();
+                for (_, circle) in view.iter() {
+                    instances.push(CircleInstance {
+                        pos: circle.position,
+                        radius: circle.radius,
+                        z: 0.,
+                        color: Vec4::new(1., 0., 0., 1.), // red
+                        thickness: 2.,
+                        fade: 0.005,
+                    });
+                }
+
+                context::push_command(RenderCommand::DrawCircles { instances: instances.into() });
+            }
         });
 
         world.add_system(ScheduleSlot::Last, |_, _| {

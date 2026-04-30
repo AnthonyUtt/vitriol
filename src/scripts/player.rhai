@@ -19,12 +19,12 @@ fn update(world, entity) {
 
     let anim = get_component("Animation", world, entity);
     let anim_list = get_component("PlayerSpritesheets", world, entity);
-    dir = direction_from_velocity(new_vel);
 
     if new_vel.x == 0. && new_vel.y == 0. {
       anim.texture_handle = anim_list.idle;
       anim.active_animation = animation_name(dir, "IDLE");
     } else {
+      dir = direction_from_velocity(new_vel);
       anim.texture_handle = anim_list.walk;
       anim.active_animation = animation_name(dir, "WALK");
       new_vel.normalize();

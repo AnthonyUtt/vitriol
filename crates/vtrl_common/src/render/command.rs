@@ -47,6 +47,12 @@ pub enum RenderCommand {
     DrawText {
         instances: Arc<[GlyphInstance]>,
     },
+    DrawLines {
+        instances: Arc<[LineInstance]>,
+    },
+    DrawCircles {
+        instances: Arc<[CircleInstance]>,
+    },
 }
 
 #[repr(C)]
@@ -71,4 +77,24 @@ pub struct GlyphInstance {
     pub color: Vec4,
     pub uv: Vec4,
     pub tex: f32,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct CircleInstance {
+    pub pos: Vec2,
+    pub radius: f32,
+    pub z: f32,
+    pub color: Vec4,
+    pub thickness: f32,
+    pub fade: f32,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct LineInstance {
+    pub start: Vec2,
+    pub end: Vec2,
+    pub color: Vec4,
+    pub thickness: f32,
 }

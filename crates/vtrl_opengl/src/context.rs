@@ -430,6 +430,20 @@ impl RenderContext {
             .unwrap()
             .draw_text_instances(self.matrix, instances);
     }
+
+    pub fn draw_line_instances(&self, instances: &[LineInstance]) {
+        self.renderer
+            .as_ref()
+            .unwrap()
+            .draw_line_instances(self.matrix, instances);
+    }
+
+    pub fn draw_circle_instances(&self, instances: &[CircleInstance]) {
+        self.renderer
+            .as_ref()
+            .unwrap()
+            .draw_circle_instances(self.matrix, instances);
+    }
 }
 
 unsafe impl Send for RenderContext {}
@@ -524,6 +538,8 @@ impl RenderQueue {
             }
             RenderCommand::DrawQuads { instances } => ctx.draw_quad_instances(&instances),
             RenderCommand::DrawText { instances } => ctx.draw_text_instances(&instances),
+            RenderCommand::DrawLines { instances } => ctx.draw_line_instances(&instances),
+            RenderCommand::DrawCircles { instances } => ctx.draw_circle_instances(&instances),
         }
     }
 }
