@@ -55,6 +55,26 @@ pub enum RenderCommand {
     },
 }
 
+pub fn instances_erased<T>(instances: &[T]) -> &[RenderInstance] {
+    use std::mem;
+    assert_eq!(mem::size_of::<T>(), mem::size_of::<RenderInstance>());
+    assert_eq!(mem::align_of::<T>(), mem::align_of::<RenderInstance>());
+
+    unsafe { mem::transmute(instances) }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct RenderInstance {
+    a: Vec2,
+    b: Vec2,
+    c: f32,
+    d: f32,
+    e: Vec4,
+    f: Vec4,
+    g: f32,
+}
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct QuadInstance {
@@ -83,11 +103,12 @@ pub struct GlyphInstance {
 #[derive(Debug, Clone, Copy)]
 pub struct CircleInstance {
     pub pos: Vec2,
-    pub radius: f32,
-    pub z: f32,
-    pub color: Vec4,
+    pub size: Vec2,
     pub thickness: f32,
     pub fade: f32,
+    pub color: Vec4,
+    pub uv: Vec4,
+    pub tex: f32,
 }
 
 #[repr(C)]
@@ -95,6 +116,9 @@ pub struct CircleInstance {
 pub struct LineInstance {
     pub start: Vec2,
     pub end: Vec2,
-    pub color: Vec4,
     pub thickness: f32,
+    pub fade: f32,
+    pub color: Vec4,
+    pub _uv: Vec4,
+    pub _tex: f32,
 }

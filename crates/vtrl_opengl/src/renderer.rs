@@ -29,8 +29,8 @@ const DEFAULT_TEX_BYTES: [u8; 4] = [255; 4];
 pub struct Renderer {
     quad_shader: ShaderProgram,
     text_shader: ShaderProgram,
-    // line_shader: ShaderProgram,
-    // circle_shader: ShaderProgram,
+    line_shader: ShaderProgram,
+    circle_shader: ShaderProgram,
     vao: VertexArray,
     _quad_vbo: VertexBuffer,
     instance_vbo: VertexBuffer,
@@ -48,6 +48,14 @@ impl Renderer {
         let text_shader = ShaderProgram::new()
             .with_vert_shader(TEXT_VERTEX_SHADER_SOURCE)
             .with_frag_shader(TEXT_FRAGMENT_SHADER_SOURCE)
+            .build();
+        let line_shader = ShaderProgram::new()
+            .with_vert_shader(LINE_VERTEX_SHADER_SOURCE)
+            .with_frag_shader(LINE_FRAGMENT_SHADER_SOURCE)
+            .build();
+        let circle_shader = ShaderProgram::new()
+            .with_vert_shader(CIRCLE_VERTEX_SHADER_SOURCE)
+            .with_frag_shader(CIRCLE_FRAGMENT_SHADER_SOURCE)
             .build();
 
         let mut vao = VertexArray::new();
@@ -100,6 +108,8 @@ impl Renderer {
         Self {
             quad_shader,
             text_shader,
+            line_shader,
+            circle_shader,
             vao,
             _quad_vbo,
             instance_vbo,
@@ -133,41 +143,66 @@ impl Renderer {
     }
 
     pub fn draw_quad_instances(&self, matrix: Mat4, instances: &[QuadInstance]) {
-        if instances.is_empty() {
-            return;
-        }
-
-        self.quad_shader.activate();
-        self.quad_shader.set_uniform_mat4("uOrtho", &matrix);
-        self.texture_array.bind(0);
-
-        self.vao.bind();
-        self.instance_vbo.bind();
-        self.instance_vbo
-            .set_data::<QuadInstance>(instances, instances.len(), 0);
-
-        unsafe {
-            gl::DrawArraysInstanced(gl::TRIANGLES, 0, 6, instances.len() as i32);
-        }
-
-        self.instance_vbo.unbind();
-        self.vao.unbind();
-        self.quad_shader.deactivate();
+        self.draw_instances(
+            &self.quad_shader,
+            matrix,
+            &self.texture_array,
+            &self.font_atlas,
+            instances_erased(instances),
+        );
     }
 
     pub fn draw_text_instances(&self, matrix: Mat4, instances: &[GlyphInstance]) {
+        self.draw_instances(
+            &self.text_shader,
+            matrix,
+            &self.texture_array,
+            &self.font_atlas,
+            instances_erased(instances),
+        );
+    }
+
+    pub fn draw_line_instances(&self, matrix: Mat4, instances: &[LineInstance]) {
+        self.draw_instances(
+            &self.line_shader,
+            matrix,
+            &self.texture_array,
+            &self.font_atlas,
+            instances_erased(instances),
+        );
+    }
+
+    pub fn draw_circle_instances(&self, matrix: Mat4, instances: &[CircleInstance]) {
+        self.draw_instances(
+            &self.circle_shader,
+            matrix,
+            &self.texture_array,
+            &self.font_atlas,
+            instances_erased(instances),
+        );
+    }
+
+    fn draw_instances(
+        &self,
+        shader: &ShaderProgram,
+        matrix: Mat4,
+        textures: &TextureArray,
+        fonts: &FontAtlas,
+        instances: &[RenderInstance],
+    ) {
         if instances.is_empty() {
             return;
         }
 
-        self.text_shader.activate();
-        self.text_shader.set_uniform_mat4("uOrtho", &matrix);
-        self.font_atlas.bind(0);
+        shader.activate();
+        shader.set_uniform_mat4("uOrtho", &matrix);
+        textures.bind(0);
+        fonts.bind(1);
 
         self.vao.bind();
         self.instance_vbo.bind();
         self.instance_vbo
-            .set_data::<GlyphInstance>(instances, instances.len(), 0);
+            .set_data::<RenderInstance>(instances, instances.len(), 0);
 
         unsafe {
             gl::DrawArraysInstanced(gl::TRIANGLES, 0, 6, instances.len() as i32);
@@ -175,18 +210,6 @@ impl Renderer {
 
         self.instance_vbo.unbind();
         self.vao.unbind();
-        self.text_shader.deactivate();
-    }
-
-    pub fn draw_line_instances(&self, matrix: Mat4, instances: &[LineInstance]) {
-        if instances.is_empty() {
-            return;
-        }
-    }
-
-    pub fn draw_circle_instances(&self, matrix: Mat4, instances: &[CircleInstance]) {
-        if instances.is_empty() {
-            return;
-        }
+        shader.deactivate();
     }
 }

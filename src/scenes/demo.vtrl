@@ -40,6 +40,10 @@ Scene(
                 "Script": (
                     script_handle: "scripts/player.rhai",
                 ),
+                "BoxCollider": (
+                    offset: (x: 0.0, y: 0.0),
+                    size: (x: 50.0, y: 50.0),
+                ),
             },
         ),
     ],

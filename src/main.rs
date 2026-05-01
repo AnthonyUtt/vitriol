@@ -41,6 +41,11 @@ impl Direction {
 fn main() -> Result<()> {
     App::new()
         .with_default_plugins()
+        .with_system(ScheduleSlot::Init, |w, _| {
+            let mut show_colliders = w.get_resource_mut::<RenderDebugColliders>()
+                .unwrap();
+            show_colliders.0 = true;
+        })
         .with_system(ScheduleSlot::First, |w, _| {
             let fps = w.get_resource::<FrameRate>().unwrap().0;
             // Add FPS to debug overlay in game window

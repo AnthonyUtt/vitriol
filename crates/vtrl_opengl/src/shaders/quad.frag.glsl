@@ -6,14 +6,15 @@ in float v_texIdx;
 
 out vec4 FragColor;
 
-uniform sampler2DArray textureArray;
+uniform sampler2DArray uTextures;
+uniform sampler2DArray _uFonts;
 
 void main()
 {
   vec4 src = v_color;
 
   if (v_texIdx >= 0.0) {
-    vec4 t = texture(textureArray, vec3(v_uv, v_texIdx));
+    vec4 t = texture(uTextures, vec3(v_uv, v_texIdx));
     src *= t;
   }
 

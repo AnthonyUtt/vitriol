@@ -118,6 +118,7 @@ impl App {
         self.plugins.insert(TimePlugin);
         self.plugins.insert(InputPlugin);
         self.plugins.insert(EntityScriptingPlugin);
+        self.plugins.insert(CollisionPlugin);
         #[cfg(debug_assertions)]
         self.plugins.insert(DebugOverlayPlugin::default());
         self

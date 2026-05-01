@@ -154,55 +154,74 @@ impl Plugin for Renderer2DPlugin {
                     blend_mode: Some(BlendMode::Alpha),
                 });
 
-                let view = w.view::<BoxCollider, ()>();
+                let view = w.view::<(BoxCollider, Transform), ()>();
                 let mut instances: Vec<LineInstance> = Vec::new();
-                for (_, collider) in view.iter() {
-                    let pos = &collider.position;
-                    let size = &collider.size;
+                for (_, (collider, xform)) in view.iter() {
+                    let pos = xform.position + collider.offset;
+                    let size = collider.size * xform.scale;
 
-                    let top_left = Vec2::new(pos.x - (size.x / 2.), pos.y - (size.y / 2.));
-                    let top_right = Vec2::new(pos.x + (size.x / 2.), pos.y - (size.y / 2.));
-                    let bottom_left = Vec2::new(pos.x - (size.x / 2.), pos.y + (size.y / 2.));
-                    let bottom_right = Vec2::new(pos.x + (size.x / 2.), pos.y + (size.y / 2.));
+                    let top_left = pos;
+                    let top_right = Vec2::new(pos.x + size.x, pos.y);
+                    let bottom_left = Vec2::new(pos.x, pos.y + size.y);
+                    let bottom_right = pos + size;
 
                     instances.push(LineInstance {
                         start: top_left,
                         end: top_right,
-                        color: Vec4::new(1., 0., 0., 1.), // red
-                        thickness: 2.,
+                        thickness: 1.5,
+                        fade: 0.005,
+                        color: Vec4::new(1., 0., 0., 1.),
+                        _uv: Vec4::zero(),
+                        _tex: 0.,
                     });
                     instances.push(LineInstance {
                         start: top_right,
                         end: bottom_right,
-                        color: Vec4::new(1., 0., 0., 1.), // red
-                        thickness: 2.,
+                        thickness: 1.5,
+                        fade: 0.005,
+                        color: Vec4::new(1., 0., 0., 1.),
+                        _uv: Vec4::zero(),
+                        _tex: 0.,
                     });
                     instances.push(LineInstance {
                         start: bottom_right,
                         end: bottom_left,
-                        color: Vec4::new(1., 0., 0., 1.), // red
-                        thickness: 2.,
+                        thickness: 1.5,
+                        fade: 0.005,
+                        color: Vec4::new(1., 0., 0., 1.),
+                        _uv: Vec4::zero(),
+                        _tex: 0.,
                     });
                     instances.push(LineInstance {
                         start: bottom_left,
                         end: top_left,
-                        color: Vec4::new(1., 0., 0., 1.), // red
-                        thickness: 2.,
+                        thickness: 1.5,
+                        fade: 0.005,
+                        color: Vec4::new(1., 0., 0., 1.),
+                        _uv: Vec4::zero(),
+                        _tex: 0.,
                     });
                 }
 
                 context::push_command(RenderCommand::DrawLines { instances: instances.into() });
 
-                let view = w.view::<CircleCollider, ()>();
+                let view = w.view::<(CircleCollider, Transform), ()>();
                 let mut instances: Vec<CircleInstance> = Vec::new();
-                for (_, circle) in view.iter() {
+                for (_, (circle, xform)) in view.iter() {
+                    let pos = xform.position + circle.offset;
+                    let size = Vec2::new(
+                        circle.radius * 2. * xform.scale.x,
+                        circle.radius * 2. * xform.scale.y,
+                    );
+
                     instances.push(CircleInstance {
-                        pos: circle.position,
-                        radius: circle.radius,
-                        z: 0.,
-                        color: Vec4::new(1., 0., 0., 1.), // red
-                        thickness: 2.,
+                        pos,
+                        size,
+                        thickness: 1.5,
                         fade: 0.005,
+                        color: Vec4::new(1., 0., 0., 1.), // red
+                        uv: Vec4::zero(),
+                        tex: 0.,
                     });
                 }
 

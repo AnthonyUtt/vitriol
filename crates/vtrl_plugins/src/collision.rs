@@ -5,13 +5,13 @@ use vtrl_ecs::prelude::*;
 
 #[component]
 pub struct BoxCollider {
-    pub position: Vec2,
+    pub offset: Vec2,
     pub size: Vec2,
 }
 
 #[component]
 pub struct CircleCollider {
-    pub position: Vec2,
+    pub offset: Vec2,
     pub radius: f32,
 }
 
