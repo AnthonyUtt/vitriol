@@ -7,12 +7,14 @@ use vtrl_ecs::prelude::*;
 pub struct BoxCollider {
     pub offset: Vec2,
     pub size: Vec2,
+    pub color: Vec4,
 }
 
 #[component]
 pub struct CircleCollider {
     pub offset: Vec2,
     pub radius: f32,
+    pub color: Vec4,
 }
 
 pub struct CollisionPlugin;

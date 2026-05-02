@@ -160,17 +160,17 @@ impl Plugin for Renderer2DPlugin {
                     let pos = xform.position + collider.offset;
                     let size = collider.size * xform.scale;
 
-                    let top_left = pos;
-                    let top_right = Vec2::new(pos.x + size.x, pos.y);
-                    let bottom_left = Vec2::new(pos.x, pos.y + size.y);
-                    let bottom_right = pos + size;
+                    let top_left = Vec2::new(pos.x - size.x / 2., pos.y - size.y / 2.);
+                    let top_right = Vec2::new(pos.x + size.x / 2., pos.y - size.y / 2.);
+                    let bottom_left = Vec2::new(pos.x - size.x / 2., pos.y + size.y / 2.);
+                    let bottom_right = Vec2::new(pos.x + size.x / 2., pos.y + size.y / 2.);
 
                     instances.push(LineInstance {
                         start: top_left,
                         end: top_right,
                         thickness: 1.5,
                         fade: 0.005,
-                        color: Vec4::new(1., 0., 0., 1.),
+                        color: collider.color,
                         _uv: Vec4::zero(),
                         _tex: 0.,
                     });
@@ -179,7 +179,7 @@ impl Plugin for Renderer2DPlugin {
                         end: bottom_right,
                         thickness: 1.5,
                         fade: 0.005,
-                        color: Vec4::new(1., 0., 0., 1.),
+                        color: collider.color,
                         _uv: Vec4::zero(),
                         _tex: 0.,
                     });
@@ -188,7 +188,7 @@ impl Plugin for Renderer2DPlugin {
                         end: bottom_left,
                         thickness: 1.5,
                         fade: 0.005,
-                        color: Vec4::new(1., 0., 0., 1.),
+                        color: collider.color,
                         _uv: Vec4::zero(),
                         _tex: 0.,
                     });
@@ -197,7 +197,7 @@ impl Plugin for Renderer2DPlugin {
                         end: top_left,
                         thickness: 1.5,
                         fade: 0.005,
-                        color: Vec4::new(1., 0., 0., 1.),
+                        color: collider.color,
                         _uv: Vec4::zero(),
                         _tex: 0.,
                     });
@@ -219,7 +219,7 @@ impl Plugin for Renderer2DPlugin {
                         size,
                         thickness: 1.5,
                         fade: 0.005,
-                        color: Vec4::new(1., 0., 0., 1.), // red
+                        color: circle.color,
                         uv: Vec4::zero(),
                         tex: 0.,
                     });

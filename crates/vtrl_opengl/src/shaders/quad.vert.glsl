@@ -25,9 +25,8 @@ void main()
     // Rotate around the pivot (assuming center of quad)
     vec2 pr = vec2(c * p.x - s * p.y, s * p.x + c * p.y);
 
-    // Translate to final position in pixel coordinates,
-    // adding half the size so posPx is the top-left corner
-    vec2 posPx = iPosPx + pr + (iSizePx * 0.5f);
+    // Translate to final position in pixel coordinates
+    vec2 posPx = iPosPx + pr;
 
     // Transform pixel coordinates to NDC using matrix
     gl_Position = uOrtho * vec4(posPx, 0.0f, 1.0f);

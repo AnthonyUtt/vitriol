@@ -39,3 +39,5 @@ fn update(world, entity) {
     set_component("Direction", world, entity, dir);
     set_component("Animation", world, entity, anim);
 }
+
+// vim: ft=rhai

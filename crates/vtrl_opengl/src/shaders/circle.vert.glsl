@@ -30,9 +30,8 @@ void main()
   // Scale the unit quad by the radius
   vec2 p = aPos * iSize * PAD;
 
-  // Translate to final position in pixel coordinates,
-  // adding half the size so posPx is the top-left corner
-  vec2 posPx = iPosPx + p + (iSize * 0.5);
+  // Translate to final position in pixel coordinates
+  vec2 posPx = iPosPx + p;
 
   // Transform pixel coordinates to NDC using matrix
   gl_Position = uOrtho * vec4(posPx, 0.0f, 1.0f);
