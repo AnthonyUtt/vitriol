@@ -166,6 +166,21 @@ impl World {
         }
     }
 
+    /// Shared-borrow the entire `ComponentPool<T>` for the lifetime of the
+    /// returned guard. Used by `Query` to acquire its borrow once at view
+    /// construction. Returns `None` if no pool exists for `T` yet.
+    pub fn borrow_pool<T: Component>(&self) -> Option<Ref<'_, ComponentPool<T>>> {
+        self.components.borrow_pool::<T>()
+    }
+
+    /// Mutably borrow the entire `ComponentPool<T>` for the lifetime of the
+    /// returned guard. Used by `QueryMut` to acquire its borrow once at view
+    /// construction. Returns `None` if no pool exists for `T` yet. Panics if
+    /// the pool is already borrowed.
+    pub fn borrow_pool_mut<T: Component>(&self) -> Option<RefMut<'_, ComponentPool<T>>> {
+        self.components.borrow_pool_mut::<T>()
+    }
+
     pub fn get_component_erased(
         &self,
         entity: Entity,

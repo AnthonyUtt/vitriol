@@ -74,6 +74,24 @@ impl<T: Component> ComponentPool<T> {
         self.entity_ids[id].map(|(_, component_id)| &mut self.components[component_id])
     }
 
+    /// Get disjoint mutable references to N components by entity. Returns `None`
+    /// if any entity is missing from this pool, or if any two entities resolve
+    /// to the same dense slot (which `slice::get_disjoint_mut` rejects).
+    pub fn get_disjoint_mut<const N: usize>(
+        &mut self,
+        entities: [Entity; N],
+    ) -> Option<[&mut T; N]> {
+        let mut indices = [0usize; N];
+        for (slot, e) in indices.iter_mut().zip(entities.iter()) {
+            let id = e.id as usize;
+            if id >= self.entity_ids.len() {
+                return None;
+            }
+            *slot = self.entity_ids[id]?.1;
+        }
+        self.components.get_disjoint_mut(indices).ok()
+    }
+
     pub fn remove(&mut self, entity: Entity) {
         let id = entity.id as usize;
         if id >= self.entity_ids.len() {

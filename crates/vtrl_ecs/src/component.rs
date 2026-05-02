@@ -12,6 +12,7 @@ mod base;
 pub use base::*;
 
 mod pool;
+pub use pool::ComponentPool;
 use pool::*;
 
 mod registry;
@@ -95,6 +96,34 @@ impl ComponentStorage {
         } else {
             None
         }
+    }
+
+    /// Shared-borrow a typed pool for the lifetime of the returned `Ref`.
+    /// Returns `None` if no pool exists for `T` yet. Multiple shared borrows
+    /// can coexist; conflicts with an active `borrow_pool_mut` panic at this
+    /// call site.
+    pub fn borrow_pool<T: Component>(&self) -> Option<Ref<'_, ComponentPool<T>>> {
+        let type_id = TypeId::of::<T>();
+        let pool = self.storage.get(&type_id)?;
+        Some(Ref::map(pool.borrow(), |p| {
+            p.as_any()
+                .downcast_ref::<ComponentPool<T>>()
+                .unwrap() // fine because we pulled by type id
+        }))
+    }
+
+    /// Borrow a typed pool for the lifetime of the returned `RefMut`. Returns
+    /// `None` if no pool exists for `T` yet (i.e. no entity has had a `T`
+    /// component inserted). Panics if the pool is already borrowed — by design,
+    /// since this is what surfaces overlapping `view_mut` access at construction.
+    pub fn borrow_pool_mut<T: Component>(&self) -> Option<RefMut<'_, ComponentPool<T>>> {
+        let type_id = TypeId::of::<T>();
+        let pool = self.storage.get(&type_id)?;
+        Some(RefMut::map(pool.borrow_mut(), |p| {
+            p.as_any_mut()
+                .downcast_mut::<ComponentPool<T>>()
+                .unwrap() // fine because we pulled by type id
+        }))
     }
 
     pub fn remove<T: Component>(&self, entity: Entity) {
