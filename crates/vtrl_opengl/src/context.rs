@@ -23,16 +23,8 @@ lazy_static! {
     static ref RENDER_QUEUE: RenderQueue = RenderQueue::new();
 }
 
-pub fn init(settings: WindowSettings) -> Result<()> {
-    RENDER_CONTEXT.lock().unwrap().init(settings)
-}
-
 pub fn push_command(cmd: RenderCommand) {
     RENDER_QUEUE.push(cmd);
-}
-
-pub fn process_events() {
-    RENDER_CONTEXT.lock().unwrap().process_events();
 }
 
 pub fn process_queue() {

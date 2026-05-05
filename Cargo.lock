@@ -1931,6 +1931,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "vtrl_render"
+version = "0.1.0"
+
+[[package]]
+name = "vtrl_window"
+version = "0.1.0"
+dependencies = [
+ "gl",
+ "glfw",
+ "lazy_static",
+ "vtrl_common",
+ "vtrl_ecs",
+]
+
+[[package]]
 name = "walkdir"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
