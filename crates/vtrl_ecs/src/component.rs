@@ -106,9 +106,7 @@ impl ComponentStorage {
         let type_id = TypeId::of::<T>();
         let pool = self.storage.get(&type_id)?;
         Some(Ref::map(pool.borrow(), |p| {
-            p.as_any()
-                .downcast_ref::<ComponentPool<T>>()
-                .unwrap() // fine because we pulled by type id
+            p.as_any().downcast_ref::<ComponentPool<T>>().unwrap() // fine because we pulled by type id
         }))
     }
 
@@ -120,9 +118,7 @@ impl ComponentStorage {
         let type_id = TypeId::of::<T>();
         let pool = self.storage.get(&type_id)?;
         Some(RefMut::map(pool.borrow_mut(), |p| {
-            p.as_any_mut()
-                .downcast_mut::<ComponentPool<T>>()
-                .unwrap() // fine because we pulled by type id
+            p.as_any_mut().downcast_mut::<ComponentPool<T>>().unwrap() // fine because we pulled by type id
         }))
     }
 

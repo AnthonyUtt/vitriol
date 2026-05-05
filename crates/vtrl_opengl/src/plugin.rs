@@ -157,7 +157,8 @@ impl Plugin for Renderer2DPlugin {
             });
 
             if let Some(render) = w.get_resource::<RenderDebugColliders>()
-                    && render.0 {
+                && render.0
+            {
                 context::push_command(RenderCommand::BeginPass {
                     name: "debug_colliders",
                     target: RenderTarget::Screen,
@@ -215,7 +216,9 @@ impl Plugin for Renderer2DPlugin {
                     });
                 }
 
-                context::push_command(RenderCommand::DrawLines { instances: instances.into() });
+                context::push_command(RenderCommand::DrawLines {
+                    instances: instances.into(),
+                });
 
                 let view = w.view::<(CircleCollider, Transform), ()>();
                 let mut instances: Vec<CircleInstance> = Vec::new();
@@ -237,7 +240,9 @@ impl Plugin for Renderer2DPlugin {
                     });
                 }
 
-                context::push_command(RenderCommand::DrawCircles { instances: instances.into() });
+                context::push_command(RenderCommand::DrawCircles {
+                    instances: instances.into(),
+                });
             }
         });
 

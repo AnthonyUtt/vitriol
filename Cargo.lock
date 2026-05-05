@@ -1926,7 +1926,6 @@ dependencies = [
  "rhai",
  "ron",
  "serde",
- "ultraviolet",
  "vtrl_common",
  "vtrl_ecs",
 ]

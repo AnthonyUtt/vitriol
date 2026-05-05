@@ -17,6 +17,7 @@ pub mod prelude {
         IVec2, IVec3, IVec4,
         UVec2, UVec3, UVec4,
         Mat2, Mat3, Mat4,
+        projection,
     };
     pub use serde;
     pub use inventory;

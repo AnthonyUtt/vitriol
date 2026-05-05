@@ -31,6 +31,10 @@ impl<T: Component> ComponentPool<T> {
         self.components.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.components.is_empty()
+    }
+
     pub fn entities(&self) -> Vec<Entity> {
         self.entity_ids
             .iter()
