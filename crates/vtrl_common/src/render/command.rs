@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use ultraviolet::{Vec2, Vec4};
+use ultraviolet::{Mat4, Vec2, Vec4};
 
 pub type FramebufferId = u32;
 
@@ -34,6 +34,7 @@ pub enum RenderCommand {
         target: RenderTarget,
         clear: Option<Vec4>,
         blend_mode: Option<BlendMode>,
+        view_projection: Option<Mat4>,
     },
     EndPass,
 

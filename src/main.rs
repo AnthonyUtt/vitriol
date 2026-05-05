@@ -41,11 +41,11 @@ impl Direction {
 fn main() -> Result<()> {
     App::new()
         .with_default_plugins()
-        .with_system(ScheduleSlot::Init, |w, _| {
-            let mut show_colliders = w.get_resource_mut::<RenderDebugColliders>()
-                .unwrap();
-            show_colliders.0 = true;
-        })
+        // .with_system(ScheduleSlot::Init, |w, _| {
+        //     let mut show_colliders = w.get_resource_mut::<RenderDebugColliders>()
+        //         .unwrap();
+        //     show_colliders.0 = true;
+        // })
         .with_system(ScheduleSlot::First, |w, _| {
             let fps = w.get_resource::<FrameRate>().unwrap().0;
             // Add FPS to debug overlay in game window
@@ -78,14 +78,14 @@ fn main() -> Result<()> {
                 };
 
                 match (dx, dy) {
-                    (0, 1) => Direction::Down,
-                    (1, 1) => Direction::DownRight,
+                    (0, 1) => Direction::Up,
+                    (1, 1) => Direction::UpRight,
                     (1, 0) => Direction::Right,
-                    (1, -1) => Direction::UpRight,
-                    (0, -1) => Direction::Up,
-                    (-1, -1) => Direction::UpLeft,
+                    (1, -1) => Direction::DownRight,
+                    (0, -1) => Direction::Down,
+                    (-1, -1) => Direction::DownLeft,
                     (-1, 0) => Direction::Left,
-                    (-1, 1) => Direction::DownLeft,
+                    (-1, 1) => Direction::UpLeft,
                     _ => Direction::Down,
                 }
             });

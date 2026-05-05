@@ -394,6 +394,7 @@ impl RenderContext {
         target: RenderTarget,
         clear: Option<Vec4>,
         blend_mode: Option<BlendMode>,
+        view_projection: Option<Mat4>,
     ) {
         log::trace!("Starting render pass: {name}");
 
@@ -412,6 +413,10 @@ impl RenderContext {
 
         if let Some(blend) = blend_mode {
             self.set_blend_mode(blend);
+        }
+
+        if let Some(m) = view_projection {
+            self.matrix = m;
         }
     }
 
@@ -527,8 +532,9 @@ impl RenderQueue {
                 target,
                 clear,
                 blend_mode,
+                view_projection,
             } => {
-                ctx.begin_pass(name, target, clear, blend_mode);
+                ctx.begin_pass(name, target, clear, blend_mode, view_projection);
             }
             RenderCommand::EndPass => ctx.end_pass(),
             RenderCommand::Batch(batch) => {

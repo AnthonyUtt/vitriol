@@ -9,7 +9,7 @@ layout (location = 5) in vec4 iColor;
 layout (location = 6) in vec4 iUV; // u0,v0,u1,v1
 layout (location = 7) in float iTexIdx;
 
-uniform mat4 uOrtho; // top-left origin ortho
+uniform mat4 uOrtho; // clip-from-world matrix (camera ortho, +y up)
 
 out vec2 v_uv;
 out vec4 v_color;
@@ -25,14 +25,16 @@ void main()
     // Rotate around the pivot (assuming center of quad)
     vec2 pr = vec2(c * p.x - s * p.y, s * p.x + c * p.y);
 
-    // Translate to final position in pixel coordinates
+    // Translate to final position in world units
     vec2 posPx = iPosPx + pr;
 
-    // Transform pixel coordinates to NDC using matrix
+    // Transform world coordinates to NDC
     gl_Position = uOrtho * vec4(posPx, 0.0f, 1.0f);
 
-    // map unit quad [-0.5..0.5] to [0..1] then lerp u0..u1
-    vec2 uv01 = aPos + vec2(0.5);
+    // Map unit quad [-0.5..0.5] to [0..1], flipping y so the texture's
+    // top row (v=0) lands on the sprite's visual top (aPos.y = +0.5 in
+    // y-up world space).
+    vec2 uv01 = vec2(aPos.x + 0.5, 0.5 - aPos.y);
     v_uv = mix(iUV.xy, iUV.zw, uv01);
 
     // pass color and texture to frag shader

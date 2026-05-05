@@ -52,11 +52,21 @@ impl Plugin for Renderer2DPlugin {
             let animations = w.get_resource::<AnimationStore>().unwrap();
             let dt = w.get_resource::<DeltaTime>().map(|t| t.0).unwrap_or(0.);
 
+            let window = context::window_size();
+            let view_projection = w
+                .view::<(Camera, Transform), ()>()
+                .iter()
+                .find(|(_, (cam, _))| cam.primary)
+                .map(|(_, (cam, xform))| {
+                    cam.view_projection(xform.position, xform.rotation, window)
+                });
+
             context::push_command(RenderCommand::BeginPass {
                 name: "world",
                 target: RenderTarget::Screen,
                 clear: Some(Vec4::new(0.3, 0.5, 0.6, 1.)),
                 blend_mode: Some(BlendMode::Alpha),
+                view_projection,
             });
 
             let view = w.view::<(Quad, Transform), ()>();
@@ -133,12 +143,13 @@ impl Plugin for Renderer2DPlugin {
                 target: RenderTarget::Screen,
                 clear: None,
                 blend_mode: Some(BlendMode::PremultipliedAlpha),
+                view_projection: None,
             });
 
             let view = w.view::<(Text, Transform), ()>();
             let mut instances: Vec<GlyphInstance> = Vec::new();
             for (_, (text, xform)) in view.iter() {
-                instances.extend(layout_text(&text, &xform));
+                instances.extend(layout_text(text, xform));
             }
 
             context::push_command(RenderCommand::DrawText {
@@ -152,6 +163,7 @@ impl Plugin for Renderer2DPlugin {
                     target: RenderTarget::Screen,
                     clear: None,
                     blend_mode: Some(BlendMode::Alpha),
+                    view_projection,
                 });
 
                 let view = w.view::<(BoxCollider, Transform), ()>();
@@ -269,6 +281,7 @@ impl Plugin for DebugOverlayPlugin {
                 target: RenderTarget::Screen,
                 clear: None,
                 blend_mode: Some(BlendMode::PremultipliedAlpha),
+                view_projection: None,
             });
             context::push_command(RenderCommand::DrawText {
                 instances: instances.into(),

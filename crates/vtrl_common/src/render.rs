@@ -1,13 +1,11 @@
 use serde_derive::*;
 
 mod bitmap;
-mod camera;
 mod command;
 mod packing;
 mod text;
 
 pub use bitmap::*;
-pub use camera::*;
 pub use command::*;
 pub use packing::*;
 pub use text::*;

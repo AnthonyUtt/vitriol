@@ -5,10 +5,10 @@ fn update(world, entity) {
     
     let new_vel = new_vec2(0., 0.);
     if input::is_key_down(Key::W) {
-      new_vel.y += -1.;
+      new_vel.y += 1.;
     }
     if input::is_key_down(Key::S) {
-      new_vel.y += 1.;
+      new_vel.y += -1.;
     }
     if input::is_key_down(Key::A) {
       new_vel.x += -1.;
