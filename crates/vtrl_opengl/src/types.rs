@@ -95,15 +95,3 @@ impl BufferLayout {
         self.stride = stride;
     }
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Glyph {
-    pub advance_x: i64,
-    pub advance_y: i64,
-    pub width: u32,
-    pub height: u32,
-    pub top: u32,
-    pub left: u32,
-    pub uv: Vec4,
-    pub buffer: Vec<u8>,
-}

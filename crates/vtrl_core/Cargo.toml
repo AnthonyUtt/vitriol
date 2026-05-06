@@ -7,7 +7,8 @@ edition = "2024"
 vtrl_common = { path = "../vtrl_common" }
 vtrl_ecs = { path = "../vtrl_ecs" }
 vtrl_plugins = { path = "../vtrl_plugins" }
-vtrl_opengl = { path = "../vtrl_opengl" }
+vtrl_window = { path = "../vtrl_window" }
+vtrl_render = { path = "../vtrl_render" }
 env_logger.workspace = true
 ctrlc = "3"
 dotenvy.workspace = true

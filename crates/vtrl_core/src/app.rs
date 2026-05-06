@@ -8,10 +8,9 @@ use std::{
 
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
-#[cfg(debug_assertions)]
-use vtrl_opengl::plugin::DebugOverlayPlugin;
-use vtrl_opengl::{plugin::Renderer2DPlugin, prelude::*};
 use vtrl_plugins::prelude::*;
+use vtrl_render::prelude::*;
+use vtrl_window::WindowPlugin;
 
 use crate::plugin::*;
 
@@ -113,8 +112,9 @@ impl App {
     }
 
     pub fn with_default_plugins(mut self) -> Self {
+        self.plugins.insert(WindowPlugin);
         self.plugins.insert(SceneManagerPlugin);
-        self.plugins.insert(Renderer2DPlugin);
+        self.plugins.insert(RenderPlugin);
         self.plugins.insert(TimePlugin);
         self.plugins.insert(InputPlugin);
         self.plugins.insert(EntityScriptingPlugin);
@@ -137,8 +137,6 @@ impl App {
     }
 
     fn bootstrap(&mut self) {
-        render_context::init(WindowSettings::default())
-            .expect("Unable to initialize render context!");
         self.plugins.bootstrap(&mut self.world, &mut self.assets);
 
         #[cfg(debug_assertions)]
@@ -147,7 +145,6 @@ impl App {
         });
 
         self.world.add_system(ScheduleSlot::Last, |_, _| {
-            render_context::process_events();
             let _ = message_bus::process_messages(None);
         });
     }

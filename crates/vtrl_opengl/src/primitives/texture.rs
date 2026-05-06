@@ -4,8 +4,6 @@ use image::EncodableLayout;
 
 use vtrl_common::prelude::*;
 
-use crate::context::register_texture;
-
 #[derive(Debug, Copy, Clone)]
 pub struct Texture {
     pub id: u32,

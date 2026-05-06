@@ -2,8 +2,6 @@ use std::collections::HashMap;
 
 use vtrl_common::prelude::*;
 
-use crate::types::*;
-
 pub struct FontAtlas {
     pub id: u32,
     pub width: u32,

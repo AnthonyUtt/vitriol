@@ -1873,8 +1873,9 @@ dependencies = [
  "env_logger",
  "vtrl_common",
  "vtrl_ecs",
- "vtrl_opengl",
  "vtrl_plugins",
+ "vtrl_render",
+ "vtrl_window",
 ]
 
 [[package]]
@@ -1933,6 +1934,11 @@ dependencies = [
 [[package]]
 name = "vtrl_render"
 version = "0.1.0"
+dependencies = [
+ "vtrl_common",
+ "vtrl_ecs",
+ "vtrl_opengl",
+]
 
 [[package]]
 name = "vtrl_window"

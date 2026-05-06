@@ -4,9 +4,6 @@ use std::collections::HashMap;
 
 use vtrl_common::prelude::*;
 
-use crate::context;
-use crate::types::*;
-
 #[derive(Debug, Clone, Copy)]
 pub struct Font {
     pub id: u32,

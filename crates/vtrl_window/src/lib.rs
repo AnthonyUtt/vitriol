@@ -20,7 +20,7 @@ lazy_static! {
 pub struct WindowPlugin;
 
 impl WindowPlugin {
-    pub fn init(settings: WindowSettings) -> Result<(WindowContext, GlfwWrapper)> {
+    pub fn init(settings: WindowSettings) -> Result<(WindowContext, GlfwWrapper, Viewport)> {
         let mut glfw = Self::init_glfw()?;
 
         glfw.window_hint(WindowHint::ContextVersionMajor(4));
@@ -67,11 +67,13 @@ impl WindowPlugin {
         let window = WindowContext {
             window: pwindow,
             events,
+        };
+        let viewport = Viewport {
             width: settings.width,
             height: settings.height,
         };
 
-        Ok((window, glfw))
+        Ok((window, glfw, viewport))
     }
 
     fn init_glfw() -> Result<Glfw> {
@@ -112,7 +114,7 @@ impl WindowPlugin {
         Ok(())
     }
 
-    pub fn process_events(glfw: &mut GlfwWrapper, window: &mut WindowContext) {
+    pub fn process_events(glfw: &mut GlfwWrapper, window: &mut WindowContext, vp: &mut Viewport) {
         glfw.poll_events();
 
         for (_, event) in glfw::flush_messages(&window.events) {
@@ -122,8 +124,8 @@ impl WindowPlugin {
                     let _ = message_bus::send(WindowMessage::Reposition(x as u32, y as u32));
                 }
                 Size(width, height) => {
-                    window.width = width as u32;
-                    window.height = height as u32;
+                    vp.width = width as u32;
+                    vp.height = height as u32;
                     let _ =
                         message_bus::send(WindowMessage::Resize(width as u32, height as u32));
                 }
@@ -193,11 +195,12 @@ impl Plugin for WindowPlugin {
         world.add_system(ScheduleSlot::Init, |w, _| {
             // TODO: pull window settings from somewhere???
             let settings = WindowSettings::default();
-            let (window, glfw) = Self::init(settings)
+            let (window, glfw, viewport) = Self::init(settings)
                 .expect("Failed to create game window!");
 
             w.add_resource(window);
             w.add_resource(glfw);
+            w.add_resource(viewport);
         });
 
         world.add_system(ScheduleSlot::First, |w, _| {
@@ -205,8 +208,10 @@ impl Plugin for WindowPlugin {
                 .expect("Unable to find window context!");
             let mut glfw = w.get_resource_mut::<GlfwWrapper>()
                 .expect("Unable to find GLFW instance!");
+            let mut viewport = w.get_resource_mut::<Viewport>()
+                .expect("Unable to find viewport!");
 
-            Self::process_events(&mut glfw, &mut window);
+            Self::process_events(&mut glfw, &mut window, &mut viewport);
         });
 
         world.add_system(ScheduleSlot::Last, |w, _| {
@@ -221,8 +226,6 @@ impl Plugin for WindowPlugin {
 pub struct WindowContext {
     pub window: PWindow,
     pub events: GlfwReceiver<(f64, glfw::WindowEvent)>,
-    pub width: u32,
-    pub height: u32,
 }
 
 pub struct GlfwWrapper(pub Box<Glfw>);

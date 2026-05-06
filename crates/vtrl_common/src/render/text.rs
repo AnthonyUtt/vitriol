@@ -1,4 +1,15 @@
 use serde_derive::*;
+use ultraviolet::Vec4;
+
+pub struct FontStore {
+
+}
+
+impl FontStore {
+    pub fn get_glyph(&self, font_id: u32, c: char) -> Option<Glyph> {
+        None
+    }
+}
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct TextStyle {
@@ -39,4 +50,16 @@ pub enum Anchor {
     TopRight,
     BottomLeft,
     BottomRight,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Glyph {
+    pub advance_x: i64,
+    pub advance_y: i64,
+    pub width: u32,
+    pub height: u32,
+    pub top: u32,
+    pub left: u32,
+    pub uv: Vec4,
+    pub buffer: Vec<u8>,
 }

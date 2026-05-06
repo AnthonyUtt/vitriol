@@ -1,0 +1,138 @@
+use vtrl_common::prelude::*;
+use vtrl_ecs::prelude::*;
+
+pub struct DebugOverlayPlugin {
+    pub anchor: Anchor,
+    pub style: TextStyle,
+    pub padding: Vec2,
+    pub color: Vec4,
+}
+
+impl Default for DebugOverlayPlugin {
+    fn default() -> Self {
+        Self {
+            anchor: Anchor::TopLeft,
+            style: TextStyle::default(),
+            padding: Vec2::new(8.0, 8.0),
+            color: Vec4::one(),
+        }
+    }
+}
+
+impl Plugin for DebugOverlayPlugin {
+    fn build(&self, world: &mut World, _mgr: &mut AssetManager) {
+        let anchor = self.anchor;
+        let style = self.style;
+        let padding = self.padding;
+        let color = self.color;
+
+        world.add_system(ScheduleSlot::PostRender, move |w, _| {
+            let mut cb = w.get_resource_mut::<CommandBuffer>()
+                .expect("Unable to find render command buffer!");
+            let viewport = w.get_resource::<Viewport>()
+                .expect("Unable to find viewport info!");
+            let fonts = w.get_resource::<FontStore>()
+                .expect("Unable to find font store!");
+
+            let lines = vtrl_common::debug::drain_lines();
+            let instances = layout_overlay(
+                &lines,
+                anchor,
+                style,
+                padding,
+                color,
+                Vec2::new(viewport.width as f32, viewport.height as f32),
+                &fonts,
+            );
+
+            cb.push(RenderCommand::BeginPass {
+                name: "debug",
+                target: RenderTarget::Screen,
+                clear: None,
+                blend_mode: Some(BlendMode::PremultipliedAlpha),
+                view_projection: None,
+            });
+
+            cb.push(RenderCommand::DrawText {
+                instances: instances.into(),
+            });
+        });
+    }
+}
+
+fn layout_overlay(
+    lines: &[String],
+    anchor: Anchor,
+    style: TextStyle,
+    padding: Vec2,
+    color: Vec4,
+    window: Vec2,
+    fonts: &FontStore,
+) -> Vec<GlyphInstance> {
+    if lines.is_empty() {
+        return Vec::new();
+    }
+
+    let logical_lines: Vec<&str> = lines.iter().flat_map(|s| s.split('\n')).collect();
+    let line_advance = style.size * style.line_height;
+    let total_height = line_advance * logical_lines.len() as f32;
+
+    // Right-anchored variants need each line's advance-sum to push the pen
+    // leftward off the right edge before drawing.
+    let line_widths: Vec<f32> = match anchor {
+        Anchor::TopRight | Anchor::BottomRight => logical_lines
+            .iter()
+            .map(|l| measure_line_width(l, style.font_id, fonts))
+            .collect(),
+        _ => Vec::new(),
+    };
+
+    // Baselines descend from this y; style.size approximates the ascent and
+    // assumes the font was rasterized at roughly that pixel size.
+    let first_baseline = match anchor {
+        Anchor::TopLeft | Anchor::TopRight => padding.y + style.size,
+        Anchor::BottomLeft | Anchor::BottomRight => {
+            window.y - padding.y - total_height + style.size
+        }
+    };
+
+    let mut instances = Vec::with_capacity(logical_lines.iter().map(|l| l.len()).sum());
+    for (i, line) in logical_lines.iter().enumerate() {
+        let pen_start = match anchor {
+            Anchor::TopLeft | Anchor::BottomLeft => padding.x,
+            Anchor::TopRight | Anchor::BottomRight => window.x - padding.x - line_widths[i],
+        };
+        let baseline = first_baseline + i as f32 * line_advance;
+        let mut pen_x = pen_start;
+
+        for c in line.chars() {
+            let Some(glyph) = fonts.get_glyph(style.font_id, c) else {
+                continue;
+            };
+
+            // Whitespace glyphs (space, tab) carry no bitmap but still advance.
+            if glyph.width > 0 && glyph.height > 0 {
+                instances.push(GlyphInstance {
+                    pos: Vec2::new(pen_x + glyph.left as f32, baseline - glyph.top as f32),
+                    size: Vec2::new(glyph.width as f32, glyph.height as f32),
+                    rot: 0.0,
+                    z: 1.0,
+                    color,
+                    uv: glyph.uv,
+                    tex: style.font_id as f32,
+                });
+            }
+
+            pen_x += glyph.advance_x as f32;
+        }
+    }
+
+    instances
+}
+
+fn measure_line_width(line: &str, font_id: u32, fonts: &FontStore) -> f32 {
+    line.chars()
+        .filter_map(|c| fonts.get_glyph(font_id, c))
+        .map(|g| g.advance_x as f32)
+        .sum()
+}

@@ -68,6 +68,112 @@ impl Plugin for CollisionPlugin {
                 }
             }
         });
+
+        world.add_system(ScheduleSlot::Render, |w, _| {
+            if let Some(render) = w.get_resource::<RenderDebugColliders>() && render.0 {
+                let mut cb = w.get_resource_mut::<CommandBuffer>()
+                    .expect("Unable to find render command buffer!");
+
+                let viewport = w.get_resource::<Viewport>()
+                    .expect("Unable to find viewport!");
+                
+                let view_projection = w.view::<(Camera, Transform), ()>()
+                    .iter()
+                    .find(|(_, (cam, _))| cam.primary)
+                    .map(|(_, (cam, xform))| {
+                        cam.view_projection(
+                            xform.position,
+                            xform.rotation,
+                            Vec2::new(viewport.width as f32, viewport.height as f32),
+                        )
+                    });
+
+                cb.push(RenderCommand::BeginPass {
+                    name: "debug_colliders",
+                    target: RenderTarget::Screen,
+                    clear: None,
+                    blend_mode: Some(BlendMode::Alpha),
+                    view_projection,
+                });
+
+                let view = w.view::<(BoxCollider, Transform), ()>();
+                let mut instances: Vec<LineInstance> = Vec::new();
+                for (_, (collider, xform)) in view.iter() {
+                    let pos = xform.position + collider.offset;
+                    let size = collider.size * xform.scale;
+
+                    let top_left = Vec2::new(pos.x - size.x / 2., pos.y - size.y / 2.);
+                    let top_right = Vec2::new(pos.x + size.x / 2., pos.y - size.y / 2.);
+                    let bottom_left = Vec2::new(pos.x - size.x / 2., pos.y + size.y / 2.);
+                    let bottom_right = Vec2::new(pos.x + size.x / 2., pos.y + size.y / 2.);
+
+                    instances.push(LineInstance {
+                        start: top_left,
+                        end: top_right,
+                        thickness: 1.5,
+                        fade: 0.005,
+                        color: collider.color,
+                        _uv: Vec4::zero(),
+                        _tex: 0.,
+                    });
+                    instances.push(LineInstance {
+                        start: top_right,
+                        end: bottom_right,
+                        thickness: 1.5,
+                        fade: 0.005,
+                        color: collider.color,
+                        _uv: Vec4::zero(),
+                        _tex: 0.,
+                    });
+                    instances.push(LineInstance {
+                        start: bottom_right,
+                        end: bottom_left,
+                        thickness: 1.5,
+                        fade: 0.005,
+                        color: collider.color,
+                        _uv: Vec4::zero(),
+                        _tex: 0.,
+                    });
+                    instances.push(LineInstance {
+                        start: bottom_left,
+                        end: top_left,
+                        thickness: 1.5,
+                        fade: 0.005,
+                        color: collider.color,
+                        _uv: Vec4::zero(),
+                        _tex: 0.,
+                    });
+                }
+
+                cb.push(RenderCommand::DrawLines {
+                    instances: instances.into(),
+                });
+
+                let view = w.view::<(CircleCollider, Transform), ()>();
+                let mut instances: Vec<CircleInstance> = Vec::new();
+                for (_, (circle, xform)) in view.iter() {
+                    let pos = xform.position + circle.offset;
+                    let size = Vec2::new(
+                        circle.radius * 2. * xform.scale.x,
+                        circle.radius * 2. * xform.scale.y,
+                    );
+
+                    instances.push(CircleInstance {
+                        pos,
+                        size,
+                        thickness: 1.5,
+                        fade: 0.005,
+                        color: circle.color,
+                        uv: Vec4::zero(),
+                        tex: 0.,
+                    });
+                }
+
+                cb.push(RenderCommand::DrawCircles {
+                    instances: instances.into(),
+                });
+            }
+        })
     }
 }
 
