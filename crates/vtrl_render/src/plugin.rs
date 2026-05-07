@@ -29,7 +29,7 @@ impl Plugin for RenderPlugin {
             let debug_font = Font::load(debug_font_bytes.to_vec())
                 .expect("Unable to parse debug font!");
             let debug_font_handle = AssetHandle::from(interned("debug-font.ttf"));
-            font_atlas.register_font(debug_font_handle, debug_font.glyphs)
+            font_atlas.set_debug_font(debug_font_handle, debug_font.glyphs)
                 .expect("Unable to register debug font!");
 
             // Global font + texture atlases for loading font data,

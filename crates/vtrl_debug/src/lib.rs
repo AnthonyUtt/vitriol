@@ -27,13 +27,15 @@ impl Plugin for DebugOverlayPlugin {
         let padding = self.padding;
         let color = self.color;
 
-        world.add_system(ScheduleSlot::PostRender, move |w, _| {
+        world.add_system(ScheduleSlot::Render, move |w, _| {
             let mut cb = w.get_resource_mut::<CommandBuffer>()
                 .expect("Unable to find render command buffer!");
             let viewport = w.get_resource::<Viewport>()
                 .expect("Unable to find viewport info!");
             let fonts = w.get_resource::<FontAtlas>()
                 .expect("Unable to find font store!");
+
+            let matrix = ortho_top_left_matrix(viewport.width as f32, viewport.height as f32);
 
             let lines = vtrl_common::debug::drain_lines();
             let instances = layout_overlay(
@@ -51,7 +53,7 @@ impl Plugin for DebugOverlayPlugin {
                 target: RenderTarget::Screen,
                 clear: None,
                 blend_mode: Some(BlendMode::PremultipliedAlpha),
-                view_projection: None,
+                view_projection: Some(matrix),
             });
 
             cb.push(RenderCommand::DrawText {
@@ -142,4 +144,25 @@ fn measure_line_width(line: &str, font: AssetHandle, fonts: &FontAtlas) -> f32 {
         .filter_map(|c| fonts.get_glyph(font, c))
         .map(|g| g.advance_x as f32)
         .sum()
+}
+
+// Matrix to be submitted to shader for converting pixels to NDC
+fn ortho_top_left_matrix(width: f32, height: f32) -> Mat4 {
+    let near = -1.;
+    let far = 1.;
+    let sx = 2. / width;
+    let sy = -2. / height; // negative to flip Y axis
+    let sz = 2. / (far - near);
+    let tx = -1.;
+    let ty = 1.;
+    let tz = -(far + near) / (far - near);
+
+    Mat4 {
+        cols: [
+            Vec4::from([sx, 0., 0., 0.]),
+            Vec4::from([0., sy, 0., 0.]),
+            Vec4::from([0., 0., sz, 0.]),
+            Vec4::from([tx, ty, tz, 1.]),
+        ],
+    }
 }

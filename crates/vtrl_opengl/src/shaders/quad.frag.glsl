@@ -6,8 +6,7 @@ in float v_texIdx;
 
 out vec4 FragColor;
 
-uniform sampler2DArray uTextures;
-uniform sampler2DArray _uFonts;
+layout(binding = 0) uniform sampler2DArray uTextures;
 
 void main()
 {
