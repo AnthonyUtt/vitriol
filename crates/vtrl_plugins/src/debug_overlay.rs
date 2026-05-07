@@ -1,5 +1,6 @@
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
+use vtrl_render::prelude::*;
 
 pub struct DebugOverlayPlugin {
     pub anchor: Anchor,
@@ -31,7 +32,7 @@ impl Plugin for DebugOverlayPlugin {
                 .expect("Unable to find render command buffer!");
             let viewport = w.get_resource::<Viewport>()
                 .expect("Unable to find viewport info!");
-            let fonts = w.get_resource::<FontStore>()
+            let fonts = w.get_resource::<FontAtlas>()
                 .expect("Unable to find font store!");
 
             let lines = vtrl_common::debug::drain_lines();
@@ -67,11 +68,17 @@ fn layout_overlay(
     padding: Vec2,
     color: Vec4,
     window: Vec2,
-    fonts: &FontStore,
+    fonts: &FontAtlas,
 ) -> Vec<GlyphInstance> {
     if lines.is_empty() {
         return Vec::new();
     }
+
+    let debug_font = fonts.get_debug_font();
+    if debug_font.is_none() {
+        return Vec::new();
+    }
+    let debug_font = debug_font.unwrap();
 
     let logical_lines: Vec<&str> = lines.iter().flat_map(|s| s.split('\n')).collect();
     let line_advance = style.size * style.line_height;
@@ -82,7 +89,7 @@ fn layout_overlay(
     let line_widths: Vec<f32> = match anchor {
         Anchor::TopRight | Anchor::BottomRight => logical_lines
             .iter()
-            .map(|l| measure_line_width(l, style.font_id, fonts))
+            .map(|l| measure_line_width(l, debug_font, fonts))
             .collect(),
         _ => Vec::new(),
     };
@@ -106,7 +113,7 @@ fn layout_overlay(
         let mut pen_x = pen_start;
 
         for c in line.chars() {
-            let Some(glyph) = fonts.get_glyph(style.font_id, c) else {
+            let Some(glyph) = fonts.get_glyph(debug_font, c) else {
                 continue;
             };
 
@@ -119,7 +126,7 @@ fn layout_overlay(
                     z: 1.0,
                     color,
                     uv: glyph.uv,
-                    tex: style.font_id as f32,
+                    tex: *fonts.get_font_tex_id(debug_font).unwrap() as f32,
                 });
             }
 
@@ -130,9 +137,9 @@ fn layout_overlay(
     instances
 }
 
-fn measure_line_width(line: &str, font_id: u32, fonts: &FontStore) -> f32 {
+fn measure_line_width(line: &str, font: AssetHandle, fonts: &FontAtlas) -> f32 {
     line.chars()
-        .filter_map(|c| fonts.get_glyph(font_id, c))
+        .filter_map(|c| fonts.get_glyph(font, c))
         .map(|g| g.advance_x as f32)
         .sum()
 }

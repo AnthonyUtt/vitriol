@@ -1914,7 +1914,6 @@ dependencies = [
  "string-interner",
  "vtrl_common",
  "vtrl_ecs",
- "vtrl_plugins",
 ]
 
 [[package]]
@@ -1929,6 +1928,7 @@ dependencies = [
  "serde",
  "vtrl_common",
  "vtrl_ecs",
+ "vtrl_render",
 ]
 
 [[package]]

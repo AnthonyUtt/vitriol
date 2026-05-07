@@ -1,4 +1,10 @@
+use image::EncodableLayout;
 use serde_derive::*;
+
+use crate::{
+    asset::Asset,
+    error::Result,
+};
 
 mod bitmap;
 mod command;
@@ -33,6 +39,18 @@ pub struct TextureData {
     pub bytes: Vec<u8>,
     pub width: u32,
     pub height: u32,
+}
+
+impl Asset for TextureData {
+    fn load(bytes: Vec<u8>) -> Result<TextureData> {
+        let img = image::load_from_memory(&bytes)?.into_rgba8();
+
+        Ok(TextureData {
+            bytes: img.to_vec(),
+            width: img.width(),
+            height: img.height(),
+        })
+    }
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]

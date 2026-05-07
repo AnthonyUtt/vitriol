@@ -1,9 +1,5 @@
 extern crate gl;
 
-use image::EncodableLayout;
-
-use vtrl_common::prelude::*;
-
 #[derive(Debug, Copy, Clone)]
 pub struct Texture {
     pub id: u32,
@@ -61,22 +57,5 @@ impl Texture {
 
     pub fn destroy(&self) {
         unsafe { gl::DeleteTextures(1, &self.id as *const u32) }
-    }
-}
-
-#[asset]
-impl Asset for Texture {
-    fn load(bytes: Vec<u8>) -> Result<Texture> {
-        let img = image::load_from_memory(&bytes)?.into_rgba8();
-
-        let tex_data = TextureData {
-            bytes: img.as_bytes().to_vec(),
-            width: img.width(),
-            height: img.height(),
-        };
-
-        let id = register_texture(&tex_data)?;
-
-        Ok(Texture { id: id as u32 })
     }
 }

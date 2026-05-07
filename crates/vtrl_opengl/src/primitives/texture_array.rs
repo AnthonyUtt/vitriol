@@ -9,13 +9,22 @@ pub struct TextureArray {
     pub height: u32,
     pub layers: u32,
     pub mip_count: u32,
+    pub channel_count: u32,
     active_layers: Vec<bool>,
     uv_scalars: Vec<Vec2>,
 }
 
 impl TextureArray {
-    pub fn new(width: u32, height: u32, count: u32, mip_count: Option<u32>) -> TextureArray {
+    pub fn new(width: u32, height: u32, count: u32, mip_count: Option<u32>, channel_count: Option<u32>) -> TextureArray {
         let mip_count = mip_count.unwrap_or(1);
+        let channel_count = channel_count.unwrap_or(4);
+
+        let internal_format = match channel_count {
+            1 => gl::R8,
+            4 => gl::RGBA8,
+            _ => panic!("Unsupported channel count!"),
+        };
+
         unsafe {
             let mut id: u32 = 0;
             gl::GenTextures(1, &mut id);
@@ -26,7 +35,7 @@ impl TextureArray {
             gl::TexStorage3D(
                 gl::TEXTURE_2D_ARRAY,
                 mip_count as i32,
-                gl::RGBA8,
+                internal_format,
                 width as i32,
                 height as i32,
                 count as i32,
@@ -55,6 +64,7 @@ impl TextureArray {
                 height,
                 layers: count,
                 mip_count,
+                channel_count,
                 active_layers: vec![false; count as usize],
                 uv_scalars: vec![Vec2::one(); count as usize],
             }
@@ -134,6 +144,11 @@ impl TextureArray {
 
     fn set_texture_data(&self, layer: usize, mip_level: Option<u32>, bytes: &[u8]) {
         let level = mip_level.unwrap_or(0);
+        let format = match self.channel_count {
+            1 => gl::RED,
+            4 => gl::RGBA,
+            _ => panic!("Unsupported channel count!"),
+        };
 
         self.bind(0);
 
@@ -147,7 +162,7 @@ impl TextureArray {
                 self.width as i32,
                 self.height as i32,
                 1, // layer count
-                gl::RGBA,
+                format,
                 gl::UNSIGNED_BYTE,
                 bytes.as_ptr().cast(),
             );
@@ -157,17 +172,17 @@ impl TextureArray {
     }
 
     fn map_smaller_texture_to_padded_bytes(&self, bytes: &[u8], dimensions: UVec2) -> Vec<u8> {
-        let byte_count = self.width * self.height * 4; // each rgba color is 4 bytes
+        let byte_count = self.width * self.height * self.channel_count;
         let mut buffer: Vec<u8> = vec![0; byte_count as usize];
 
         // for each row of the texture, add the bytes to the buffer at the
         // correct position. Since the buffer is full of zeroes, we don't need
         // to pad anything, just assign values for the slice
         for row in 0..dimensions.y {
-            let buffer_start = row as usize * (self.width * 4) as usize;
-            let buffer_end = buffer_start + (dimensions.x * 4) as usize;
-            let tex_start = row as usize * (dimensions.x * 4) as usize;
-            let tex_end = tex_start + (dimensions.x * 4) as usize;
+            let buffer_start = row as usize * (self.width * self.channel_count) as usize;
+            let buffer_end = buffer_start + (dimensions.x * self.channel_count) as usize;
+            let tex_start = row as usize * (dimensions.x * self.channel_count) as usize;
+            let tex_end = tex_start + (dimensions.x * self.channel_count) as usize;
 
             buffer[buffer_start..buffer_end].clone_from_slice(&bytes[tex_start..tex_end]);
         }

@@ -1,6 +1,9 @@
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
 
+use crate::font_atlas::*;
+use crate::texture_atlas::*;
+
 pub struct RenderPlugin;
 
 impl Plugin for RenderPlugin {
@@ -52,6 +55,18 @@ impl Plugin for RenderPlugin {
         // uncoupled from the renderer plugin (i.e. debug rendering for colliders,
         // the main debug overlay, etc).
         world.add_resource(CommandBuffer::default);
+
+        world.add_system(ScheduleSlot::Init, |w, _mgr| {
+            // Global font + texture atlases for loading font data,
+            // added on init so we can be sure that GLFW / GL have
+            // both been initialized and loaded (since this runs
+            // after the WindowPlugin).
+            let font_atlas = FontAtlas::default();
+            // TODO: load default font - need to add new load_from_bytes
+            // method to asset manager
+            w.add_resource(font_atlas);
+            w.add_resource(TextureAtlas::new(1024, 1024))
+        });
 
         // Primary render system
         // - Query all entities to be rendered

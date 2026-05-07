@@ -1,7 +1,7 @@
 Scene(
     assets: [
-        AssetDef(asset_type: "Texture", path: "assets/walk.png"),
-        AssetDef(asset_type: "Texture", path: "assets/idle.png"),
+        AssetDef(asset_type: "TextureData", path: "assets/walk.png"),
+        AssetDef(asset_type: "TextureData", path: "assets/idle.png"),
         AssetDef(asset_type: "AnimationSet", path: "animations/player.anim"),
         AssetDef(asset_type: "EntityScript", path: "scripts/player.rhai"),
     ],
