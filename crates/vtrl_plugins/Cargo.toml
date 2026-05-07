@@ -6,7 +6,6 @@ edition = "2024"
 [dependencies]
 vtrl_common = { path = "../vtrl_common" }
 vtrl_ecs = { path = "../vtrl_ecs" }
-vtrl_render = { path = "../vtrl_render" }
 once_cell.workspace = true
 glfw.workspace = true
 serde.workspace = true

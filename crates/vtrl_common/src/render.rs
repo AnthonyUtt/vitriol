@@ -1,8 +1,7 @@
-use image::EncodableLayout;
 use serde_derive::*;
 
 use crate::{
-    asset::Asset,
+    asset::{Asset, AssetRegistration},
     error::Result,
 };
 
@@ -51,6 +50,10 @@ impl Asset for TextureData {
             height: img.height(),
         })
     }
+}
+
+inventory::submit! {
+    AssetRegistration::new::<TextureData>("TextureData")
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]

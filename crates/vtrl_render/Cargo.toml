@@ -6,4 +6,8 @@ edition = "2024"
 [dependencies]
 vtrl_common = { path = "../vtrl_common" }
 vtrl_ecs = { path = "../vtrl_ecs" }
+vtrl_plugins = { path = "../vtrl_plugins" }
 vtrl_opengl = { path = "../vtrl_opengl" }
+ron.workspace = true
+string-interner.workspace = true
+serde.workspace = true

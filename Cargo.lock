@@ -1872,10 +1872,20 @@ dependencies = [
  "dotenvy",
  "env_logger",
  "vtrl_common",
+ "vtrl_debug",
  "vtrl_ecs",
  "vtrl_plugins",
  "vtrl_render",
  "vtrl_window",
+]
+
+[[package]]
+name = "vtrl_debug"
+version = "0.1.0"
+dependencies = [
+ "vtrl_common",
+ "vtrl_ecs",
+ "vtrl_render",
 ]
 
 [[package]]
@@ -1928,16 +1938,19 @@ dependencies = [
  "serde",
  "vtrl_common",
  "vtrl_ecs",
- "vtrl_render",
 ]
 
 [[package]]
 name = "vtrl_render"
 version = "0.1.0"
 dependencies = [
+ "ron",
+ "serde",
+ "string-interner",
  "vtrl_common",
  "vtrl_ecs",
  "vtrl_opengl",
+ "vtrl_plugins",
 ]
 
 [[package]]

@@ -18,4 +18,10 @@ impl CommandBuffer {
     pub fn push(&mut self, cmd: RenderCommand) {
         self.commands.push(cmd);
     }
+
+    pub fn take(&mut self) -> Vec<RenderCommand> {
+        let inner = self.commands.clone();
+        self.commands = Vec::new();
+        inner
+    }
 }

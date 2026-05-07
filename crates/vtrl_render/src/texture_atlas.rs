@@ -33,4 +33,16 @@ impl TextureAtlas {
             None => Vec2::zero(),
         }
     }
+
+    pub fn get_texture_id(&self, handle: AssetHandle) -> Option<&usize> {
+        self.handles_to_ids.get(&handle)
+    }
+
+    pub fn bind(&self, slot: u32) {
+        self.tex_array.bind(slot)
+    }
+
+    pub fn unbind(&self) {
+        self.tex_array.unbind()
+    }
 }

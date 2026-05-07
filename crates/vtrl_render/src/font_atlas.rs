@@ -103,6 +103,14 @@ impl FontAtlas {
     pub fn get_font_tex_id(&self, font: AssetHandle) -> Option<&usize> {
         self.handles_to_ids.get(&font)
     }
+
+    pub fn bind(&self, slot: u32) {
+        self.tex_array.bind(slot)
+    }
+
+    pub fn unbind(&self) {
+        self.tex_array.unbind()
+    }
 }
 
 impl Default for FontAtlas {

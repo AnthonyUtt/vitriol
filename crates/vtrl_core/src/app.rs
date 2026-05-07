@@ -11,6 +11,7 @@ use vtrl_ecs::prelude::*;
 use vtrl_plugins::prelude::*;
 use vtrl_render::prelude::*;
 use vtrl_window::WindowPlugin;
+use vtrl_debug::DebugOverlayPlugin;
 
 use crate::plugin::*;
 
@@ -19,6 +20,7 @@ pub struct App {
     plugins: PluginStorage,
     world: World,
     assets: AssetManager,
+    game_systems: Vec<(ScheduleSlot, Box<dyn System>)>,
 }
 
 impl App {
@@ -63,6 +65,7 @@ impl App {
             plugins: PluginStorage::default(),
             world: World::new(),
             assets: AssetManager::new(),
+            game_systems: Vec::new(),
         }
     }
 
@@ -125,7 +128,7 @@ impl App {
     }
 
     pub fn with_system(mut self, slot: ScheduleSlot, system: impl System) -> Self {
-        self.world.add_system(slot, system);
+        self.game_systems.push((slot, Box::new(system)));
         self
     }
 
@@ -147,6 +150,10 @@ impl App {
         self.world.add_system(ScheduleSlot::Last, |_, _| {
             let _ = message_bus::process_messages(None);
         });
+
+        for (slot, system) in self.game_systems.drain(..) {
+            self.world.add_system(slot, system);
+        }
     }
 }
 

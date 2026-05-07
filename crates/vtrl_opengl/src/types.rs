@@ -1,5 +1,3 @@
-use serde_derive::*;
-
 use vtrl_common::prelude::*;
 
 #[derive(Debug, Copy, Clone)]

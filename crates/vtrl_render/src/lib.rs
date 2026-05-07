@@ -1,7 +1,7 @@
-mod backend;
-mod context;
+mod animations;
 mod font_atlas;
 mod plugin;
+mod renderer;
 mod texture_atlas;
 
 pub mod prelude {

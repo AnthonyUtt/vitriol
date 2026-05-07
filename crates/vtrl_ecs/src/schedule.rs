@@ -2,7 +2,7 @@ use std::{collections::HashMap, rc::Rc};
 
 use crate::prelude::System;
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone, Copy)]
 pub enum ScheduleSlot {
     // Initialization
     PreInit,

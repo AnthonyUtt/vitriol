@@ -9,6 +9,7 @@ vtrl_ecs = { path = "../vtrl_ecs" }
 vtrl_plugins = { path = "../vtrl_plugins" }
 vtrl_window = { path = "../vtrl_window" }
 vtrl_render = { path = "../vtrl_render" }
+vtrl_debug = { path = "../vtrl_debug" }
 env_logger.workspace = true
 ctrlc = "3"
 dotenvy.workspace = true

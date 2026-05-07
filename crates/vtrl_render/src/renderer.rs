@@ -1,19 +1,13 @@
-extern crate freetype as ft;
-extern crate gl;
-
-use std::collections::HashMap;
-
 use vtrl_common::prelude::*;
+use vtrl_opengl::prelude::*;
 
-use crate::primitives::*;
-use crate::shaders::*;
-use crate::types::*;
+use crate::{
+    font_atlas::*,
+    texture_atlas::*,
+};
+
 
 const MAX_QUADS: usize = 1_000_000;
-const MAX_TEXTURES: usize = 32;
-const MAX_FONTS: usize = 16;
-
-const DEFAULT_FONT_BYTES: &[u8] = include_bytes!("./assets/monogram-extended.ttf");
 
 const UNIT_QUAD: [Vec4; 6] = [
     Vec4::new(-0.5, 0.5, 0., 1.),  // top left
@@ -24,8 +18,6 @@ const UNIT_QUAD: [Vec4; 6] = [
     Vec4::new(0.5, -0.5, 0., 1.),  // bottom right
 ];
 
-const DEFAULT_TEX_BYTES: [u8; 4] = [255; 4];
-
 pub struct Renderer {
     quad_shader: ShaderProgram,
     text_shader: ShaderProgram,
@@ -34,9 +26,6 @@ pub struct Renderer {
     vao: VertexArray,
     _quad_vbo: VertexBuffer,
     instance_vbo: VertexBuffer,
-    _default_texture_id: usize,
-    texture_array: TextureArray,
-    font_atlas: FontAtlas,
 }
 
 impl Renderer {
@@ -82,29 +71,6 @@ impl Renderer {
         ]);
         vao.add_vertex_buffer(instance_vbo.clone());
 
-        let mut texture_array = TextureArray::new(1024, 1024, MAX_TEXTURES as u32, None);
-        let default_texture = TextureData {
-            bytes: DEFAULT_TEX_BYTES.to_vec(),
-            width: 1,
-            height: 1,
-        };
-        let _default_texture_id = texture_array
-            .add_texture(&default_texture)
-            .expect("Unable to create default texture!");
-
-        let mut font_atlas = FontAtlas::new(1024, 1024, MAX_FONTS as u32);
-
-        let library = ft::Library::init().expect("Unable to initialize FreeType!");
-        let face = library
-            .new_memory_face(DEFAULT_FONT_BYTES.to_vec(), 0)
-            .expect("Unable to load default font!");
-        face.set_pixel_sizes(0, DEFAULT_PIXEL_HEIGHT)
-            .expect("Unable to size default font!");
-        let glyphs = build_glyph_map(&face).expect("Unable to build default glyphs!");
-        font_atlas
-            .add_font(glyphs)
-            .expect("Unable to register default font!");
-
         Self {
             quad_shader,
             text_shader,
@@ -113,71 +79,69 @@ impl Renderer {
             vao,
             _quad_vbo,
             instance_vbo,
-            _default_texture_id,
-            texture_array,
-            font_atlas,
         }
     }
 
-    pub fn register_texture(&mut self, texture: &TextureData) -> Result<usize> {
-        self.texture_array.add_texture(texture)
-    }
-
-    pub fn register_font(&mut self, glyphs: HashMap<char, Glyph>) -> Result<usize> {
-        self.font_atlas.add_font(glyphs)
-    }
-
-    pub fn get_glyph(&self, font_id: u32, c: char) -> Option<&Glyph> {
-        self.font_atlas.get_glyph(font_id as usize, c)
-    }
-
-    pub fn compute_uv(&self, texture_id: usize, uv: Vec4) -> Vec4 {
-        let scalar = self.texture_array.get_uv_scalar(texture_id);
-
-        Vec4::new(
-            uv.x * scalar.x,
-            uv.y * scalar.y,
-            uv.z * scalar.x,
-            uv.w * scalar.y,
-        )
-    }
-
-    pub fn draw_quad_instances(&self, matrix: Mat4, instances: &[QuadInstance]) {
+    pub fn draw_quad_instances(
+        &self,
+        matrix: Mat4,
+        texture_atlas: &TextureAtlas,
+        font_atlas: &FontAtlas,
+        instances: &[QuadInstance],
+    ) {
         self.draw_instances(
             &self.quad_shader,
             matrix,
-            &self.texture_array,
-            &self.font_atlas,
+            texture_atlas,
+            font_atlas,
             instances_erased(instances),
         );
     }
 
-    pub fn draw_text_instances(&self, matrix: Mat4, instances: &[GlyphInstance]) {
+    pub fn draw_text_instances(
+        &self,
+        matrix: Mat4,
+        texture_atlas: &TextureAtlas,
+        font_atlas: &FontAtlas,
+        instances: &[GlyphInstance],
+    ) {
         self.draw_instances(
             &self.text_shader,
             matrix,
-            &self.texture_array,
-            &self.font_atlas,
+            texture_atlas,
+            font_atlas,
             instances_erased(instances),
         );
     }
 
-    pub fn draw_line_instances(&self, matrix: Mat4, instances: &[LineInstance]) {
+    pub fn draw_line_instances(
+        &self,
+        matrix: Mat4,
+        texture_atlas: &TextureAtlas,
+        font_atlas: &FontAtlas,
+        instances: &[LineInstance],
+    ) {
         self.draw_instances(
             &self.line_shader,
             matrix,
-            &self.texture_array,
-            &self.font_atlas,
+            texture_atlas,
+            font_atlas,
             instances_erased(instances),
         );
     }
 
-    pub fn draw_circle_instances(&self, matrix: Mat4, instances: &[CircleInstance]) {
+    pub fn draw_circle_instances(
+        &self,
+        matrix: Mat4,
+        texture_atlas: &TextureAtlas,
+        font_atlas: &FontAtlas,
+        instances: &[CircleInstance],
+    ) {
         self.draw_instances(
             &self.circle_shader,
             matrix,
-            &self.texture_array,
-            &self.font_atlas,
+            texture_atlas,
+            font_atlas,
             instances_erased(instances),
         );
     }
@@ -186,7 +150,7 @@ impl Renderer {
         &self,
         shader: &ShaderProgram,
         matrix: Mat4,
-        textures: &TextureArray,
+        textures: &TextureAtlas,
         fonts: &FontAtlas,
         instances: &[RenderInstance],
     ) {
@@ -204,9 +168,7 @@ impl Renderer {
         self.instance_vbo
             .set_data::<RenderInstance>(instances, instances.len(), 0);
 
-        unsafe {
-            gl::DrawArraysInstanced(gl::TRIANGLES, 0, 6, instances.len() as i32);
-        }
+        commands::draw_instanced(instances.len() as u32);
 
         self.instance_vbo.unbind();
         self.vao.unbind();
