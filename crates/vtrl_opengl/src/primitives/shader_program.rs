@@ -166,10 +166,31 @@ impl ShaderProgram {
         }
     }
 
+    pub fn set_uniform_vec2(&self, name: &str, value: &Vec2) {
+        unsafe {
+            let loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
+            gl::Uniform2f(loc, value.x, value.y);
+        }
+    }
+
+    pub fn set_uniform_vec3(&self, name: &str, value: &Vec3) {
+        unsafe {
+            let loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
+            gl::Uniform3f(loc, value.x, value.y, value.z);
+        }
+    }
+
     pub fn set_uniform_vec4(&self, name: &str, value: &Vec4) {
         unsafe {
             let loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
             gl::Uniform4f(loc, value.x, value.y, value.z, value.w);
+        }
+    }
+
+    pub fn set_uniform_float(&self, name: &str, value: f32) {
+        unsafe {
+            let loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
+            gl::Uniform1f(loc, value);
         }
     }
 
@@ -180,10 +201,24 @@ impl ShaderProgram {
         }
     }
 
+    pub fn set_uniform_uint(&self, name: &str, value: u32) {
+        unsafe {
+            let loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
+            gl::Uniform1ui(loc, value);
+        }
+    }
+
     pub fn set_uniform_int_arr(&self, name: &str, values: &[i32], count: usize) {
         unsafe {
             let loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
             gl::Uniform1iv(loc, count as i32, values.as_ptr().cast());
+        }
+    }
+
+    pub fn set_uniform_uint_arr(&self, name: &str, values: &[u32], count: usize) {
+        unsafe {
+            let loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
+            gl::Uniform1uiv(loc, count as i32, values.as_ptr().cast());
         }
     }
 

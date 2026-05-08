@@ -8,3 +8,6 @@ vtrl_common = { path = "../vtrl_common" }
 vtrl_ecs = { path = "../vtrl_ecs" }
 vtrl_opengl = { path = "../vtrl_opengl" }
 vtrl_render = { path = "../vtrl_render" }
+vtrl_scene = { path = "../vtrl_scene" }
+serde.workspace = true
+image.workspace = true

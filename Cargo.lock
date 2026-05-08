@@ -1973,10 +1973,13 @@ dependencies = [
 name = "vtrl_tilemap"
 version = "0.1.0"
 dependencies = [
+ "image",
+ "serde",
  "vtrl_common",
  "vtrl_ecs",
  "vtrl_opengl",
  "vtrl_render",
+ "vtrl_scene",
 ]
 
 [[package]]
