@@ -1876,6 +1876,8 @@ dependencies = [
  "vtrl_ecs",
  "vtrl_plugins",
  "vtrl_render",
+ "vtrl_scene",
+ "vtrl_time",
  "vtrl_window",
 ]
 
@@ -1938,6 +1940,8 @@ dependencies = [
  "serde",
  "vtrl_common",
  "vtrl_ecs",
+ "vtrl_render",
+ "vtrl_time",
 ]
 
 [[package]]
@@ -1950,7 +1954,37 @@ dependencies = [
  "vtrl_common",
  "vtrl_ecs",
  "vtrl_opengl",
- "vtrl_plugins",
+ "vtrl_scene",
+ "vtrl_time",
+]
+
+[[package]]
+name = "vtrl_scene"
+version = "0.1.0"
+dependencies = [
+ "erased-serde",
+ "ron",
+ "serde",
+ "vtrl_common",
+ "vtrl_ecs",
+]
+
+[[package]]
+name = "vtrl_tilemap"
+version = "0.1.0"
+dependencies = [
+ "vtrl_common",
+ "vtrl_ecs",
+ "vtrl_opengl",
+ "vtrl_render",
+]
+
+[[package]]
+name = "vtrl_time"
+version = "0.1.0"
+dependencies = [
+ "vtrl_common",
+ "vtrl_ecs",
 ]
 
 [[package]]

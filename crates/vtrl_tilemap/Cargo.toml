@@ -1,5 +1,5 @@
 [package]
-name = "vtrl_render"
+name = "vtrl_tilemap"
 version = "0.1.0"
 edition = "2024"
 
@@ -7,8 +7,4 @@ edition = "2024"
 vtrl_common = { path = "../vtrl_common" }
 vtrl_ecs = { path = "../vtrl_ecs" }
 vtrl_opengl = { path = "../vtrl_opengl" }
-vtrl_scene = { path = "../vtrl_scene" }
-vtrl_time = { path = "../vtrl_time" }
-ron.workspace = true
-string-interner.workspace = true
-serde.workspace = true
+vtrl_render = { path = "../vtrl_render" }

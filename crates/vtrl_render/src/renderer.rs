@@ -2,6 +2,7 @@ use vtrl_common::prelude::*;
 use vtrl_opengl::prelude::*;
 
 use crate::{
+    command::*,
     font_atlas::*,
     texture_atlas::*,
 };

@@ -6,16 +6,14 @@ use crate::{
 };
 
 mod bitmap;
-mod command;
-mod context;
 mod packing;
 mod text;
+mod types;
 
 pub use bitmap::*;
-pub use command::*;
-pub use context::*;
 pub use packing::*;
 pub use text::*;
+pub use types::*;
 
 pub struct WindowSettings {
     pub width: u32,

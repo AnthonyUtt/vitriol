@@ -1,9 +1,11 @@
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
-use vtrl_plugins::prelude::*;
 use vtrl_opengl::prelude::*;
+use vtrl_scene::*;
+use vtrl_time::*;
 
 use crate::animations::*;
+use crate::command::*;
 use crate::font_atlas::*;
 use crate::texture_atlas::*;
 use crate::renderer::*;

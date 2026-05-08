@@ -12,6 +12,8 @@ use vtrl_plugins::prelude::*;
 use vtrl_render::prelude::*;
 use vtrl_window::WindowPlugin;
 use vtrl_debug::DebugOverlayPlugin;
+use vtrl_scene::*;
+use vtrl_time::*;
 
 use crate::plugin::*;
 

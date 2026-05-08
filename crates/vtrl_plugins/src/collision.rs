@@ -2,6 +2,7 @@ use std::ops::Deref;
 
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
+use vtrl_render::prelude::*;
 
 mod checks;
 use checks::*;

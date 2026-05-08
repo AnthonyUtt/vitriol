@@ -2,9 +2,9 @@ use std::ops::{Deref, DerefMut};
 
 use vtrl_common::prelude::*;
 use vtrl_ecs::prelude::*;
+use vtrl_time::DeltaTime;
 
 use crate::input::*;
-use crate::time::DeltaTime;
 
 pub struct ScriptEngine(rhai::Engine);
 impl Deref for ScriptEngine {

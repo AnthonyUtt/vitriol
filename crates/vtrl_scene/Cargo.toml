@@ -1,16 +1,11 @@
 [package]
-name = "vtrl_plugins"
+name = "vtrl_scene"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 vtrl_common = { path = "../vtrl_common" }
 vtrl_ecs = { path = "../vtrl_ecs" }
-vtrl_render = { path = "../vtrl_render" }
-vtrl_time = { path = "../vtrl_time" }
-once_cell.workspace = true
-glfw.workspace = true
 serde.workspace = true
 ron.workspace = true
 erased-serde.workspace = true
-rhai.workspace = true
