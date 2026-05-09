@@ -1877,6 +1877,7 @@ dependencies = [
  "vtrl_plugins",
  "vtrl_render",
  "vtrl_scene",
+ "vtrl_tilemap",
  "vtrl_time",
  "vtrl_window",
 ]

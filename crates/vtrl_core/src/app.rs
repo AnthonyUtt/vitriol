@@ -14,6 +14,7 @@ use vtrl_window::WindowPlugin;
 use vtrl_debug::DebugOverlayPlugin;
 use vtrl_scene::*;
 use vtrl_time::*;
+use vtrl_tilemap::prelude::*;
 
 use crate::plugin::*;
 
@@ -124,6 +125,7 @@ impl App {
         self.plugins.insert(InputPlugin);
         self.plugins.insert(EntityScriptingPlugin);
         self.plugins.insert(CollisionPlugin);
+        self.plugins.insert(TilemapPlugin);
         #[cfg(debug_assertions)]
         self.plugins.insert(DebugOverlayPlugin::default());
         self

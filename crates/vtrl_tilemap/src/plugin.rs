@@ -13,8 +13,10 @@ pub struct TilemapPlugin;
 
 impl Plugin for TilemapPlugin {
     fn build(&self, world: &mut World, _: &mut AssetManager) {
-        world.add_resource(TileAtlas::default());
-        world.add_resource(TilemapRenderer::default());
+        world.add_system(ScheduleSlot::Init, |w, _| {
+            w.add_resource(TileAtlas::default());
+            w.add_resource(TilemapRenderer::default());
+        });
 
         world.add_system(ScheduleSlot::PreRender, |w, mgr| {
             // Drain freshly-loaded tilesets from the scene manager

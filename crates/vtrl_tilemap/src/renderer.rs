@@ -83,7 +83,7 @@ impl TilemapRenderer {
         self.shader.set_uniform_vec2("uTilemapOffset", &offset);
         self.shader.set_uniform_float("uTileSize", tile_size);
         self.shader.set_uniform_uint("uColumns", column_count);
-        self.shader.set_uniform_uint("uRowCount", row_count);
+        self.shader.set_uniform_uint("uRows", row_count);
         self.shader.set_uniform_float("uTexId", tex_id);
 
         atlas.bind(0);
