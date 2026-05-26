@@ -47,16 +47,16 @@ suggests itself.
 ```mermaid
 flowchart TB
     subgraph App["App (vtrl_core)"]
-        PS[PluginStorage<br/>insertion-ordered Vec]
-        World[(World<br/>ECS + Schedule + Resources)]
-        AM[(AssetManager<br/>+ AssetRegistry)]
-        Loop[16-stage Schedule<br/>PreInit -> ... -> PostShutdown]
+        PS["PluginStorage<br/>insertion-ordered Vec"]
+        World[("World<br/>ECS + Schedule + Resources")]
+        AM[("AssetManager<br/>+ AssetRegistry")]
+        Loop["16-stage Schedule<br/>PreInit → ... → PostShutdown"]
     end
 
     subgraph Bus["Global Message Bus (vtrl_common)"]
         direction LR
-        Chan[flume mpmc channel<br/>Envelope = Message + timestamp]
-        Handlers[Handlers: Generic | Typed&#40;TypeId&#41;]
+        Chan["flume mpmc channel<br/>Envelope = Message + timestamp"]
+        Handlers["Handlers: Generic or Typed(TypeId)"]
     end
 
     subgraph Plugins["Plugins"]
@@ -87,7 +87,7 @@ flowchart TB
     World --> Loop
     Loop -- "system(&mut World, &mut AssetManager)" --> AM
 
-    AM -- "load::&lt;T&gt;(path)" --> Stores[(typed AssetStore&lt;T&gt;)]
+    AM -- "load::&lt;T&gt;(path)" --> Stores[("typed AssetStore&lt;T&gt;")]
     AM -- "notify watcher (debug)" --> HR[poll_hot_reload]
     HR --> AR
 
